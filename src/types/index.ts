@@ -1,5 +1,7 @@
 import type { Task, Project, User, TaskStatus, TaskPriority } from '@/core/db/schema';
 
+export type { Task, Project, User, TaskStatus, TaskPriority };
+
 // API Response Types
 export type ApiResponse<T> = {
   success: boolean;
@@ -15,6 +17,7 @@ export type TaskWithRelations = Task & {
 
 // Form Input Types
 export type CreateTaskInput = {
+  id?: string;
   projectId: string;
   title: string;
   description?: string;

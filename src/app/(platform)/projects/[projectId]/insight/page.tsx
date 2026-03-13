@@ -1,15 +1,17 @@
 import { DashboardContainer } from '@/modules/insight/components/dashboard-container';
 
-interface InsightPageProps {
-  params: {
+type Props = {
+  params: Promise<{
     projectId: string;
-  };
-}
+  }>;
+};
 
-export default function InsightPage({ params }: InsightPageProps) {
+export default async function InsightPage({ params }: Props) {
+  const { projectId } = await params;
+  
   return (
-    <div className="h-full">
-      <DashboardContainer projectId={params.projectId} />
+    <div className="h-full bg-background">
+      <DashboardContainer projectId={projectId} />
     </div>
   );
 }

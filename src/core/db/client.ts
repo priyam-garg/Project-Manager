@@ -1,6 +1,14 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { sql } from 'drizzle-orm';
 import * as schema from './schema';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env.local if DATABASE_URL is not set (e.g. running standalone script)
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+}
 
 // Database connection configuration
 const connectionString = process.env.DATABASE_URL || '';
@@ -41,7 +49,7 @@ export async function checkDatabaseHealth(): Promise<boolean> {
 
   try {
     // Simple query to check connection
-    await db.execute(postgres.sql`SELECT 1`);
+    await db.execute(sql`SELECT 1`);
     return true;
   } catch (error) {
     console.error('Database health check failed:', error);

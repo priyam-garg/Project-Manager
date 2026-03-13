@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Menu } from 'lucide-react';
-import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { UserNav } from '@/components/layout/user-nav';
 import { Button } from '@/components/ui/button';
 import { useProjectsStore } from '@/stores/projects-store';
 import { useUIStore } from '@/stores/ui-store';
@@ -129,7 +129,7 @@ export function Header() {
             <span className="text-sm font-medium">{currentProject.name}</span>
           </div>
         )}
-        <ThemeToggle />
+        <UserNav />
       </div>
     </header>
   );

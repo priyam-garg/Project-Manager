@@ -49,11 +49,12 @@ export function MessageItem({ message }: MessageItemProps) {
         <div className="prose prose-sm dark:prose-invert max-w-none">
           <ReactMarkdown
             components={{
-              code({ node, inline, className, children, ...props }: any) {
+              code({ inline, className, children, ref: _ref, ...props }: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { inline?: boolean }) {
                 const match = /language-(\w+)/.exec(className || '');
                 return !inline && match ? (
                   <SyntaxHighlighter
-                    style={vscDarkPlus}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    style={vscDarkPlus as any}
                     language={match[1]}
                     PreTag="div"
                     {...props}

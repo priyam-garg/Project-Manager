@@ -20,7 +20,7 @@ interface TaskEditorProps {
 export function TaskEditor({ task, isSelected, onToggleSelect, onChange }: TaskEditorProps) {
   const [localTask, setLocalTask] = useState(task);
 
-  const handleChange = (field: keyof GeneratedTask, value: any) => {
+  const handleChange = <K extends keyof GeneratedTask>(field: K, value: GeneratedTask[K]) => {
     const updated = { ...localTask, [field]: value };
     setLocalTask(updated);
     onChange(updated);

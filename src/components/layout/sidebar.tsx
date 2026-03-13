@@ -13,9 +13,6 @@ import {
   BarChart3,
   X,
   ChevronDown,
-  User,
-  LogOut,
-  Settings,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -30,7 +27,6 @@ export function Sidebar() {
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
   const { currentProjectId, getCurrentProject, projects, setProjects } = useProjectsStore();
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const currentProject = getCurrentProject();
@@ -93,13 +89,6 @@ export function Sidebar() {
     : [];
 
   const isActive = (href: string) => pathname === href;
-
-  // Mock current user
-  const currentUser = {
-    name: 'Alice Johnson',
-    email: 'alice@example.com',
-    avatarUrl: '/avatars/alice.jpg',
-  };
 
   return (
     <>
@@ -205,46 +194,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        {/* User Profile Menu */}
-        <div className="border-t p-4">
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
-              </div>
-              <div className="flex flex-1 flex-col items-start overflow-hidden">
-                <span className="truncate font-medium">{currentUser.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {currentUser.email}
-                </span>
-              </div>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 transition-transform',
-                  userMenuOpen && 'rotate-180'
-                )}
-              />
-            </button>
-
-            {/* User dropdown */}
-            {userMenuOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 rounded-md border bg-popover shadow-lg">
-                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent">
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </button>
-                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-accent">
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
       </aside>
     </>
   );
