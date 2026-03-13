@@ -1,10 +1,10 @@
-const drizzleConfig = {
-  schema: "./src/core/db/schema.ts",
-  out: "./drizzle",
-  dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL ?? "",
-  },
-};
+import { defineConfig } from 'drizzle-kit';
 
-export default drizzleConfig;
+export default defineConfig({
+  schema: './src/core/db/schema.ts',
+  out: './drizzle',
+  dialect: 'postgresql',
+  dbCredentials: {
+    url: process.env.DATABASE_URL ?? '',
+  },
+});

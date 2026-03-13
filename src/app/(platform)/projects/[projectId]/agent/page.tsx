@@ -1,14 +1,15 @@
-type AgentPageProps = {
-  params: Promise<{ projectId: string }>;
-};
+import { AgentContainer } from '@/modules/agent/components/agent-container';
 
-export default async function AgentPage({ params }: AgentPageProps) {
-  const { projectId } = await params;
+interface AgentPageProps {
+  params: {
+    projectId: string;
+  };
+}
 
+export default function AgentPage({ params }: AgentPageProps) {
   return (
-    <main>
-      <h1 className="text-2xl font-semibold">Senior Architect Agent</h1>
-      <p className="mt-2 text-sm text-foreground/70">Agent workspace for project {projectId}.</p>
-    </main>
+    <div className="h-full">
+      <AgentContainer projectId={params.projectId} />
+    </div>
   );
 }

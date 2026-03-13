@@ -1,18 +1,21 @@
+'use client';
+
+import { use, useEffect } from 'react';
+import { useProjectsStore } from '@/stores/projects-store';
+
 type ProjectLayoutProps = {
   children: React.ReactNode;
   params: Promise<{ projectId: string }>;
 };
 
-export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
-  const { projectId } = await params;
+export default function ProjectLayout({ children, params }: ProjectLayoutProps) {
+  const { setCurrentProject } = useProjectsStore();
+  const { projectId } = use(params);
 
-  return (
-    <section className="min-h-screen p-6">
-      <header className="mb-6">
-        <p className="text-xs uppercase tracking-wide text-foreground/60">Project Context</p>
-        <h2 className="text-xl font-semibold">Project {projectId}</h2>
-      </header>
-      {children}
-    </section>
-  );
+  // Set current project ID when layout mounts
+  useEffect(() => {
+    setCurrentProject(projectId);
+  }, [projectId, setCurrentProject]);
+
+  return <>{children}</>;
 }
