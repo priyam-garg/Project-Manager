@@ -24,7 +24,11 @@ export function Card({ task }: CardProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // If listeners are on the card, dnd-kit might take over the events.
+    // However, with activationConstraint, click should still work.
+    // We prevent propagation just in case something else is listening.
+    e.stopPropagation();
     openTaskModal(task.id);
   };
 

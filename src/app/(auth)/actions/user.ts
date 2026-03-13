@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { User } from '@/core/db/schema';
 
-export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser(): Promise<Partial<User> | null> {
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -19,7 +19,12 @@ export async function getCurrentUser(): Promise<User | null> {
     .single();
 
   if (dbError || !userData) {
-    return null;
+    // Fallback to auth data if DB record is missing
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    };
   }
 
   return userData as User;

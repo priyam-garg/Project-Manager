@@ -19,6 +19,14 @@ import { useTasks } from '../hooks/use-tasks';
 import { moveTask } from '../actions';
 import { Column } from './column';
 import { Card } from './card';
+import { TaskModal } from './task-modal';
+import { CreateTaskForm } from './create-task-form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +38,9 @@ const STATUSES: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'done'];
 
 export function Board({ projectId }: BoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('backlog');
+  
   const { tasks, isLoading } = useTasks(projectId);
   const { optimisticMoveTask, revertOptimisticUpdate } = useTasksStore();
   const { sidebarOpen } = useUIStore();
@@ -146,14 +157,34 @@ export function Board({ projectId }: BoardProps) {
             key={status}
             status={status}
             tasks={tasksByStatus[status]}
+            onAddTask={() => {
+              setDefaultStatus(status);
+              setIsCreateDialogOpen(true);
+            }}
           />
         ))}
       </section>
 
-      {/* Drag Overlay */}
       <DragOverlay>
         {activeTask ? <Card task={activeTask} /> : null}
       </DragOverlay>
+
+      <TaskModal />
+
+      {/* Create Task Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create New Task</DialogTitle>
+          </DialogHeader>
+          <CreateTaskForm
+            projectId={projectId}
+            defaultStatus={defaultStatus}
+            onSuccess={() => setIsCreateDialogOpen(false)}
+            onCancel={() => setIsCreateDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </DndContext>
   );
 }

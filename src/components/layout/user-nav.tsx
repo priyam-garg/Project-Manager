@@ -23,7 +23,7 @@ export function UserNav() {
   const { theme, setTheme: setNextTheme } = useTheme();
   const setTheme = useUIStore((state) => state.setTheme);
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<DbUser | null>(null);
+  const [user, setUser] = useState<Partial<DbUser> | null>(null);
 
   useEffect(() => {
     setMounted(true);
