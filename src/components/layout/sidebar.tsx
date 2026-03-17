@@ -25,7 +25,7 @@ type NavItem = {
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
-  const { currentProjectId, getCurrentProject, projects, setProjects } = useProjectsStore();
+  const { currentProjectId, getCurrentProject, projects, setProjects, setCurrentProject } = useProjectsStore();
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -45,6 +45,20 @@ export function Sidebar() {
       loadProjects();
     }
   }, [projects.length, setProjects]);
+
+  // Validate currentProjectId against loaded projects
+  // Clears stale IDs from localStorage (e.g. old mock data like "project-3")
+  useEffect(() => {
+    if (projects.length === 0) return;
+
+    if (currentProjectId) {
+      const exists = projects.some((p) => p.id === currentProjectId);
+      if (!exists) {
+        // Stale project ID — clear it
+        setCurrentProject(projects[0].id);
+      }
+    }
+  }, [projects, currentProjectId, setCurrentProject]);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -147,7 +161,10 @@ export function Sidebar() {
                     <Link
                       key={project.id}
                       href={`/projects/${project.id}/board`}
-                      onClick={() => setProjectMenuOpen(false)}
+                      onClick={() => {
+                        setCurrentProject(project.id);
+                        setProjectMenuOpen(false);
+                      }}
                       className={cn(
                         'block px-3 py-2 text-sm hover:bg-accent',
                         project.id === currentProjectId && 'bg-accent'

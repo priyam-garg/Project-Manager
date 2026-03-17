@@ -1,16 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '@/modules/projects/hooks/use-projects';
+import { useProjectsStore } from '@/stores/projects-store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, FolderKanban, Calendar } from 'lucide-react';
+import { CreateProjectDialog } from '@/modules/projects/components/create-project-dialog';
 
 export default function ProjectsDashboardPage() {
   const router = useRouter();
   const { projects, isLoading } = useProjects();
+  const { setCurrentProject } = useProjectsStore();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Redirect to first project if only one exists
   useEffect(() => {
@@ -48,7 +52,7 @@ export default function ProjectsDashboardPage() {
               Manage and organize your projects
             </p>
           </div>
-          <Button size="lg" className="gap-2">
+          <Button size="lg" className="gap-2" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4" />
             Create Project
           </Button>
@@ -61,7 +65,10 @@ export default function ProjectsDashboardPage() {
               <Card
                 key={project.id}
                 className="p-6 hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => router.push(`/projects/${project.id}/board`)}
+                onClick={() => {
+                  setCurrentProject(project.id);
+                  router.push(`/projects/${project.id}/board`);
+                }}
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
@@ -103,7 +110,7 @@ export default function ProjectsDashboardPage() {
                   Get started by creating your first project to organize your tasks and collaborate with your team.
                 </p>
               </div>
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4" />
                 Create Your First Project
               </Button>
@@ -111,6 +118,9 @@ export default function ProjectsDashboardPage() {
           </Card>
         )}
       </div>
+
+      {/* Create Project Dialog */}
+      <CreateProjectDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   );
 }

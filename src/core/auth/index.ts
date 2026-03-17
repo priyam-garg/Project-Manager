@@ -1,3 +1,1 @@
-export const authConfig = {
-  enabled: false,
-};
+export { getAuthUser, getOptionalAuthUser } from './get-user';

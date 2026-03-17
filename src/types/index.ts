@@ -1,6 +1,26 @@
-import type { Task, Project, User, TaskStatus, TaskPriority } from '@/core/db/schema';
+import type {
+  Task,
+  Project,
+  User,
+  TaskStatus,
+  TaskPriority,
+  ProjectMember,
+  ChatMessageRecord,
+  AgentGeneration,
+  MemberRole,
+} from '@/core/db/schema';
 
-export type { Task, Project, User, TaskStatus, TaskPriority };
+export type {
+  Task,
+  Project,
+  User,
+  TaskStatus,
+  TaskPriority,
+  ProjectMember,
+  ChatMessageRecord,
+  AgentGeneration,
+  MemberRole,
+};
 
 // API Response Types
 export type ApiResponse<T> = {
@@ -28,6 +48,16 @@ export type CreateTaskInput = {
 
 export type UpdateTaskInput = Partial<CreateTaskInput> & {
   id: string;
+};
+
+export type CreateProjectInput = {
+  name: string;
+  description?: string;
+};
+
+export type UpdateProjectInput = {
+  name?: string;
+  description?: string;
 };
 
 // Chat Types

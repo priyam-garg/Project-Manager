@@ -2,53 +2,40 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import * as schema from './schema';
-import * as dotenv from 'dotenv';
-import path from 'path';
-
-// Load .env.local if DATABASE_URL is not set (e.g. running standalone script)
-if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-}
 
 // Database connection configuration
-const connectionString = process.env.DATABASE_URL || '';
+const connectionString = process.env.DATABASE_URL;
 
-// For development, we'll use a mock mode if no DATABASE_URL is provided
-const isMockMode = !process.env.DATABASE_URL;
-
-let db: ReturnType<typeof drizzle>;
-
-if (isMockMode) {
-  // Mock mode for development without database
-  console.warn('Running in mock mode - no DATABASE_URL provided');
-  // Create a minimal client that won't actually connect
-  const mockClient = postgres(connectionString, {
-    max: 1,
-    idle_timeout: 20,
-    connect_timeout: 10,
-  });
-  db = drizzle(mockClient, { schema });
-} else {
-  // Production mode with actual database connection
-  const client = postgres(connectionString, {
-    prepare: false, // Required for PgBouncer/Transaction Pool compatibility
-    max: 10, // Connection pool size
-    idle_timeout: 20,
-    connect_timeout: 10,
-  });
-  db = drizzle(client, { schema });
+if (!connectionString) {
+  throw new Error(
+    'DATABASE_URL is not set. Please add it to your .env file.\n' +
+      'Example: DATABASE_URL="postgresql://user:password@localhost:5432/nexus_db"'
+  );
 }
 
-export { db };
+// Singleton pattern to prevent multiple connections in dev (Next.js hot reload)
+const globalForDb = globalThis as unknown as {
+  pgClient: ReturnType<typeof postgres> | undefined;
+};
+
+const client =
+  globalForDb.pgClient ??
+  postgres(connectionString, {
+    prepare: false, // Required for Supabase/PgBouncer transaction pool
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForDb.pgClient = client;
+}
+
+export const db = drizzle(client, { schema });
 
 // Health check function
 export async function checkDatabaseHealth(): Promise<boolean> {
-  if (isMockMode) {
-    return true; // Always healthy in mock mode
-  }
-
   try {
-    // Simple query to check connection
     await db.execute(sql`SELECT 1`);
     return true;
   } catch (error) {
