@@ -1,7 +1,18 @@
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { db } from '../client';
-import { tasks, taskEvents } from '../schema';
+import { tasks, taskEvents, users } from '../schema';
 import type { Task, TaskStatus } from '../schema';
+
+export type TaskEventWithUser = {
+  id: string;
+  taskId: string;
+  eventType: 'created' | 'updated' | 'status_changed' | 'assigned' | 'deleted';
+  oldValue: string | null;
+  newValue: string | null;
+  userId: string | null;
+  timestamp: Date;
+  userName: string | null;
+};
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -20,6 +31,29 @@ export async function getTasksByProject(projectId: string): Promise<Task[]> {
 export async function getTaskById(taskId: string): Promise<Task | null> {
   const result = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
   return result[0] ?? null;
+}
+
+/**
+ * Get task activity events with actor names.
+ */
+export async function getTaskEventsByTaskId(taskId: string): Promise<TaskEventWithUser[]> {
+  const rows = await db
+    .select({
+      id: taskEvents.id,
+      taskId: taskEvents.taskId,
+      eventType: taskEvents.eventType,
+      oldValue: taskEvents.oldValue,
+      newValue: taskEvents.newValue,
+      userId: taskEvents.userId,
+      timestamp: taskEvents.timestamp,
+      userName: users.name,
+    })
+    .from(taskEvents)
+    .leftJoin(users, eq(taskEvents.userId, users.id))
+    .where(eq(taskEvents.taskId, taskId))
+    .orderBy(desc(taskEvents.timestamp));
+
+  return rows;
 }
 
 /**

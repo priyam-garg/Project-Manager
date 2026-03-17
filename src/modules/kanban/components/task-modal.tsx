@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useUIStore } from '@/stores/ui-store';
 import { useTasksStore } from '@/stores/tasks-store';
-import { updateTask, deleteTask } from '@/modules/kanban/actions';
+import { updateTask, deleteTask, getTaskEvents } from '@/modules/kanban/actions';
 import type { Task, TaskStatus, TaskPriority } from '@/core/db/schema';
+import type { TaskEventWithUser } from '@/core/db/queries/tasks';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ export function TaskModal() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [taskEvents, setTaskEvents] = useState<TaskEventWithUser[]>([]);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -55,25 +57,49 @@ export function TaskModal() {
     }
   }, [task]);
 
-  // Mock task events for activity timeline
-  const mockEvents = task
-    ? [
-        {
-          id: '1',
-          type: 'created',
-          description: 'Task created',
-          timestamp: task.createdAt,
-          user: 'Alice Johnson',
-        },
-        {
-          id: '2',
-          type: 'status_changed',
-          description: `Status changed to ${task.status}`,
-          timestamp: task.updatedAt,
-          user: 'Bob Smith',
-        },
-      ]
-    : [];
+  useEffect(() => {
+    if (!taskModalOpen || !task) {
+      setTaskEvents([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadTaskEvents = async () => {
+      const result = await getTaskEvents(task.id);
+      if (!isMounted) return;
+
+      if (result.success && result.data) {
+        setTaskEvents(result.data);
+      } else {
+        setTaskEvents([]);
+      }
+    };
+
+    loadTaskEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [taskModalOpen, task]);
+
+  const getEventDescription = (event: TaskEventWithUser) => {
+    switch (event.eventType) {
+      case 'created':
+        return 'Task created';
+      case 'status_changed':
+        return `Status changed to ${
+          event.newValue ? getStatusLabel(event.newValue as TaskStatus) : 'unknown'
+        }`;
+      case 'assigned':
+        return `Task assigned to ${event.newValue ?? 'unknown'}`;
+      case 'deleted':
+        return 'Task deleted';
+      case 'updated':
+      default:
+        return 'Task updated';
+    }
+  };
 
   const handleSave = async () => {
     if (!task) return;
@@ -292,17 +318,21 @@ export function TaskModal() {
                 <span>Activity</span>
               </div>
               <div className="space-y-3">
-                {mockEvents.map((event) => (
+                {taskEvents.map((event) => (
                   <div key={event.id} className="flex gap-3 text-sm">
                     <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary" />
                     <div className="flex-1">
-                      <p className="text-foreground">{event.description}</p>
+                      <p className="text-foreground">{getEventDescription(event)}</p>
                       <p className="text-xs text-muted-foreground">
-                        {event.user} • {new Date(event.timestamp).toLocaleString()}
+                        {event.userName || event.userId || 'Unknown user'} •{' '}
+                        {new Date(event.timestamp).toLocaleString()}
                       </p>
                     </div>
                   </div>
                 ))}
+                {taskEvents.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+                )}
               </div>
             </div>
           )}

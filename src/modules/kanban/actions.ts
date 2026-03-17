@@ -6,11 +6,13 @@ import type { CreateTaskInput, UpdateTaskInput, ApiResponse } from '@/types';
 import { getAuthUser } from '@/core/auth';
 import {
   getTasksByProject,
+  getTaskEventsByTaskId,
   createTask as dbCreateTask,
   updateTask as dbUpdateTask,
   deleteTask as dbDeleteTask,
   moveTask as dbMoveTask,
 } from '@/core/db/queries';
+import type { TaskEventWithUser } from '@/core/db/queries/tasks';
 
 export async function getTasks(projectId: string): Promise<ApiResponse<Task[]>> {
   try {
@@ -19,6 +21,18 @@ export async function getTasks(projectId: string): Promise<ApiResponse<Task[]>> 
   } catch (error) {
     console.error('Failed to fetch tasks:', error);
     return { success: false, error: 'Failed to fetch tasks' };
+  }
+}
+
+export async function getTaskEvents(
+  taskId: string
+): Promise<ApiResponse<TaskEventWithUser[]>> {
+  try {
+    const events = await getTaskEventsByTaskId(taskId);
+    return { success: true, data: events };
+  } catch (error) {
+    console.error('Failed to fetch task events:', error);
+    return { success: false, error: 'Failed to fetch task events' };
   }
 }
 
