@@ -8,6 +8,7 @@ type ChatState = {
 
   // Actions
   addMessage: (projectId: string, message: ChatMessage) => void;
+  setConversation: (projectId: string, messages: ChatMessage[]) => void;
   getConversation: (projectId: string) => ChatMessage[];
   clearConversation: (projectId: string) => void;
   setLoading: (isLoading: boolean) => void;
@@ -22,6 +23,11 @@ export const useChatStore = create<ChatState>()(
       addMessage: (projectId, message) =>
         set((state) => {
           const existing = state.conversations[projectId] || { projectId, messages: [] };
+          const alreadyExists = existing.messages.some((m) => m.id === message.id);
+          if (alreadyExists) {
+            return state;
+          }
+
           return {
             conversations: {
               ...state.conversations,
@@ -32,6 +38,17 @@ export const useChatStore = create<ChatState>()(
             },
           };
         }),
+
+      setConversation: (projectId, messages) =>
+        set((state) => ({
+          conversations: {
+            ...state.conversations,
+            [projectId]: {
+              projectId,
+              messages,
+            },
+          },
+        })),
 
       getConversation: (projectId) => {
         const { conversations } = get();

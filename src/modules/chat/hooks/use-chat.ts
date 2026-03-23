@@ -1,10 +1,30 @@
+import { useEffect } from 'react';
 import { useChatStore } from '@/stores/chat-store';
-import { sendChatMessage } from '../actions';
+import { loadChatHistory, sendChatMessage } from '../actions';
 import { generateId } from '@/lib/mock-data';
 
 export function useChat(projectId: string) {
-  const { getConversation, addMessage, isLoading, setLoading } = useChatStore();
+  const { getConversation, addMessage, setConversation, isLoading, setLoading } = useChatStore();
   const messages = getConversation(projectId);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const hydrateConversation = async () => {
+      setLoading(true);
+      const result = await loadChatHistory(projectId);
+      setLoading(false);
+
+      if (!isMounted || !result.success || !result.data) return;
+      setConversation(projectId, result.data);
+    };
+
+    hydrateConversation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, setConversation, setLoading]);
 
   const sendMessage = async (content: string) => {
     // Add user message immediately
@@ -21,7 +41,7 @@ export function useChat(projectId: string) {
     const result = await sendChatMessage(projectId, content);
     setLoading(false);
 
-    if (result.success && result.data) {
+    if (result.data) {
       addMessage(projectId, result.data);
     }
   };

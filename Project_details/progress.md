@@ -1,5 +1,11 @@
 # 🚀 Project Nexus: Implementation Status Report
 
+## 0. 📝 Latest Update (18/03/2026)
+
+* Completed **2 git push** updates today.
+* Push 1: Replaced hardcoded task activity users with real actor data from `task_events` + `users` join.
+* Push 2: Improved activity text to show friendly status labels (e.g., `In Progress` instead of `in_progress`).
+
 ---
 
 ## 1. 🧱 Core Architecture & Tech Stack

@@ -1,4 +1,13 @@
-import { pgTable, text, timestamp, pgEnum, integer, jsonb } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  pgEnum,
+  integer,
+  jsonb,
+  boolean,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
@@ -105,6 +114,42 @@ export const chatMessages = pgTable('chat_messages', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const chatMessageMetrics = pgTable('chat_message_metrics', {
+  messageId: text('message_id')
+    .primaryKey()
+    .references(() => chatMessages.id, { onDelete: 'cascade' }),
+  provider: text('provider').notNull(),
+  model: text('model').notNull(),
+  prompt: text('prompt').notNull(),
+  response: text('response').notNull(),
+  latencyMs: integer('latency_ms').notNull(),
+  promptTokens: integer('prompt_tokens'),
+  completionTokens: integer('completion_tokens'),
+  totalTokens: integer('total_tokens'),
+  retryCount: integer('retry_count').notNull().default(0),
+  errorStatus: boolean('error_status').notNull().default(false),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const chatRateLimits = pgTable(
+  'chat_rate_limits',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    projectId: text('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    windowKey: text('window_key').notNull(),
+    requestCount: integer('request_count').notNull().default(0),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.projectId, table.windowKey] }),
+  })
+);
+
 // ─── Agent Generations ────────────────────────────────────────────────────────
 
 export const agentGenerations = pgTable('agent_generations', {
@@ -128,6 +173,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   memberships: many(projectMembers),
   assignedTasks: many(tasks),
   chatMessages: many(chatMessages),
+  chatRateLimits: many(chatRateLimits),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -138,6 +184,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   members: many(projectMembers),
   tasks: many(tasks),
   chatMessages: many(chatMessages),
+  chatRateLimits: many(chatRateLimits),
   agentGenerations: many(agentGenerations),
 }));
 
@@ -186,6 +233,24 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   }),
 }));
 
+export const chatMessageMetricsRelations = relations(chatMessageMetrics, ({ one }) => ({
+  message: one(chatMessages, {
+    fields: [chatMessageMetrics.messageId],
+    references: [chatMessages.id],
+  }),
+}));
+
+export const chatRateLimitsRelations = relations(chatRateLimits, ({ one }) => ({
+  user: one(users, {
+    fields: [chatRateLimits.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [chatRateLimits.projectId],
+    references: [projects.id],
+  }),
+}));
+
 export const agentGenerationsRelations = relations(agentGenerations, ({ one }) => ({
   project: one(projects, {
     fields: [agentGenerations.projectId],
@@ -205,6 +270,8 @@ export type ProjectMember = typeof projectMembers.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type TaskEvent = typeof taskEvents.$inferSelect;
 export type ChatMessageRecord = typeof chatMessages.$inferSelect;
+export type ChatMessageMetric = typeof chatMessageMetrics.$inferSelect;
+export type ChatRateLimit = typeof chatRateLimits.$inferSelect;
 export type AgentGeneration = typeof agentGenerations.$inferSelect;
 export type TaskStatus = (typeof taskStatusEnum.enumValues)[number];
 export type TaskPriority = (typeof taskPriorityEnum.enumValues)[number];
