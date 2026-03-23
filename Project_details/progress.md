@@ -1,10 +1,17 @@
 # 🚀 Project Nexus: Implementation Status Report
 
-## 0. 📝 Latest Update (18/03/2026)
+## 0. 📝 Latest Update (23/03/2026)
 
-* Completed **2 git push** updates today.
-* Push 1: Replaced hardcoded task activity users with real actor data from `task_events` + `users` join.
-* Push 2: Improved activity text to show friendly status labels (e.g., `In Progress` instead of `in_progress`).
+* Implemented **real AI chat integration** — chat responses are no longer mock-generated.
+* Built multi-provider AI layer (`src/core/ai/chat.ts`, `src/core/ai/models.ts`) supporting OpenAI, Gemini, and Anthropic.
+* Added **AI telemetry tracking** — new `chat_message_metrics` table logs provider, model, latency, token usage, retry count, and error status per message.
+* Added **chat rate limiting** — new `chat_rate_limits` table with sliding window per user/project (default 20 req/min).
+* Chat actions now call real LLM with conversation history (last 20 messages) and graceful error fallback.
+* Added duplicate message prevention in chat store.
+
+### Previous Updates
+* (18/03/2026) Replaced hardcoded task activity users with real actor data from `task_events` + `users` join. Improved activity text to show friendly status labels.
+* (18/03/2026) Added Google OAuth authentication.
 
 ---
 
@@ -17,7 +24,8 @@
   * Customized theme radius and colors
 * **State Management:** Zustand (with `persist` middleware for local storage)
 * **Database & ORM:** PostgreSQL (Supabase), Drizzle ORM
-* **Authentication:** Supabase (Email/Password)
+* **Authentication:** Supabase (Email/Password + Google OAuth)
+* **AI Providers:** OpenAI (default), Gemini, Anthropic — configurable via env vars
 
 ### 📦 Key Libraries
 
@@ -41,18 +49,20 @@
 ### 📐 Schema (`src/core/db/schema.ts`)
 
 * Defined using Drizzle ORM
-* **7 tables total** (4 original + 3 new):
+* **9 tables total** (4 original + 5 new):
 
   * `users` — user profiles synced from Supabase auth
   * `projects` — with `owner_id` FK → users
-  * `project_members` — **NEW** — links users↔projects with role enum (`owner`, `admin`, `member`)
+  * `project_members` — links users↔projects with role enum (`owner`, `admin`, `member`)
   * `tasks` — with `ON DELETE CASCADE` to projects, `SET NULL` on assignee
   * `taskEvents` — audit trail for task changes, `ON DELETE CASCADE` to tasks
-  * `chatMessages` — **NEW** — persists chat conversations per project
-  * `agentGenerations` — **NEW** — logs AI task generation requests with JSONB tasks
+  * `chatMessages` — persists chat conversations per project
+  * `chatMessageMetrics` — **NEW** — AI telemetry per assistant message (provider, model, latency, tokens, errors)
+  * `chatRateLimits` — **NEW** — sliding window rate limiting per user/project with composite PK
+  * `agentGenerations` — logs AI task generation requests with JSONB tasks
 
 * **5 enums:** `task_status`, `task_priority`, `event_type`, `member_role`, `chat_role`
-* **11 foreign key constraints** with proper `CASCADE` / `SET NULL` behavior
+* **13 foreign key constraints** with proper `CASCADE` / `SET NULL` behavior
 * Full Drizzle relations defined for all tables
 
 ### 🔌 Client (`src/core/db/client.ts`)
@@ -70,7 +80,7 @@
   * `projects.ts` — `getUserProjects`, `getProjectById`, `createProject` (with auto owner membership), `updateProject`, `deleteProject`, `isProjectMember`
   * `tasks.ts` — Full CRUD + `moveTask` (with status_changed event logging) + `bulkCreateTasks` (for agent)
   * `users.ts` — `getUserById`, `getUserByEmail`, `upsertUser`
-  * `chat.ts` — `getChatMessages`, `saveChatMessage`, `clearChatHistory`
+  * `chat.ts` — `getChatMessages`, `saveChatMessage` (with metrics persistence), `clearChatHistory`, `consumeChatRateLimit`
   * `analytics.ts` — Real aggregation queries: `getProjectMetrics`, `getTaskDistribution`, `getPriorityBreakdown`, `getMemberPerformance`, `getBurndownData`
   * `agent.ts` — `saveGeneration`, `getGenerationHistory`, `updateGenerationAcceptedCount`
 
@@ -279,10 +289,12 @@ All server actions use **real PostgreSQL queries** via Drizzle ORM with **authen
 
 #### 🔗 Backend
 
-* `sendChatMessage` — persists user message + mock AI response to `chatMessages` table
+* `sendChatMessage` — persists user message, calls real LLM (with last 20 messages as context), saves AI response + telemetry metrics
 * `loadChatHistory` — loads conversation from database
 * `clearChat` — clears all messages for a project
-* *AI responses still mock-generated (AI integration is a future feature)*
+* **AI Integration: COMPLETE** — Multi-provider support (OpenAI, Gemini, Anthropic) with retry logic, timeout handling, and graceful error fallback
+* **Rate Limiting** — Sliding window rate limiter (default: 20 requests/minute per user/project)
+* **Telemetry** — Every AI response tracked with provider, model, latency, token counts, retry count, error status
 
 ---
 
@@ -403,15 +415,57 @@ Project Nexus has achieved:
 
 * **Production-quality frontend** with modular, scalable architecture
 * **Real PostgreSQL backend** with Drizzle ORM queries replacing all mock data
-* **7-table database schema** with proper foreign keys, cascades, and audit logging
-* **Authentication enforcement** on all server actions via Supabase
+* **9-table database schema** with proper foreign keys, cascades, audit logging, and AI telemetry
+* **Authentication enforcement** on all server actions via Supabase (Email/Password + Google OAuth)
 * **Working project creation flow** with form validation and auto-navigation
 * **Project-aware sidebar** that validates selected project against real data
+* **Real AI chat integration** with multi-provider support (OpenAI/Gemini/Anthropic), rate limiting, and telemetry
+* **Task event tracking** with real user data and friendly status labels
 
-### 🔮 Remaining for Future
+---
 
-* AI integration for chat responses (currently mock)
-* AI integration for task generation (currently mock)
-* RAG (Retrieval-Augmented Generation) system
-* Team collaboration features (invite members to projects)
-* Real-time updates via WebSocket/Supabase Realtime
+### 🔮 Remaining — Ordered by Priority (Next Steps)
+
+#### Step 1: Context-Aware Chat via RAG (Roadmap Section 4)
+> **Goal:** Make the AI chat aware of project tasks so it can answer questions like "What high-priority tasks are blocking?"
+
+* Enable `pgvector` extension on Supabase PostgreSQL
+* Add `embedding` column (vector, 1536 dimensions) to `tasks` table
+* Add HNSW index on embedding column for fast similarity search
+* Build vectorization pipeline (`src/core/ai/embedding.ts`) using OpenAI `text-embedding-3-small`
+* Auto-generate embeddings on task create/update via `after()` API (background, non-blocking)
+* Build hybrid search retriever (`src/modules/rag/retriever.ts`) — combines vector similarity + SQL filters (project_id, status, priority)
+* Inject retrieved task context into chat system prompt before calling LLM
+* Add `tags` (jsonb) and `ai_metadata` (jsonb) columns to tasks for richer semantic search
+
+#### Step 2: Senior Architect Agent (Roadmap Section 5)
+> **Goal:** Replace mock task generation with a real LangGraph-powered agent that decomposes requirements into tasks
+
+* Install `@langchain/openai`, `@langchain/langgraph`
+* Define Zod schemas for structured agent output (`TaskSchema`, `ArchitectOutputSchema`)
+* Build LangGraph state machine (`src/modules/architect/graph.ts`) with Plan → Critique → Execute loop
+* Add `tech_stack` (jsonb) and `architectural_guidelines` (text) columns to `projects` table
+* Wire architect agent into existing `generateTasks` server action (replace mock)
+* Add `ai_generated` (boolean) and `story_points` (integer) columns to tasks
+
+#### Step 3: AI-Powered Insight Narratives (Roadmap Section 6)
+> **Goal:** Feed existing analytics data into LLM to generate narrative reports with actionable recommendations
+
+* Build metric extraction service (`src/modules/insight/metrics.ts`) — velocity, feature-to-bug ratio, stagnation detection
+* Create LLM prompt template that acts as a "Product Manager" interpreting project metrics
+* Add narrative generation to the Insight dashboard alongside existing charts
+
+#### Step 4: Real-Time Sync via SSE (Roadmap Section 7)
+> **Goal:** Enable live updates across browser tabs/users when tasks change
+
+* Create Postgres LISTEN/NOTIFY trigger on `tasks` table
+* Build SSE endpoint (`src/app/api/sse/route.ts`)
+* Add client-side `useEffect` hook to subscribe to SSE stream and call `router.refresh()`
+* Alternatively: evaluate using Supabase Realtime (simpler with existing Supabase setup)
+
+#### Step 5: Team Collaboration
+> **Goal:** Allow inviting other users to projects
+
+* Build invite flow UI (email-based invite)
+* Add invite acceptance/rejection logic
+* Role-based permissions enforcement on server actions
