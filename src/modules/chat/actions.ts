@@ -9,6 +9,7 @@ import {
   consumeChatRateLimit,
 } from '@/core/db/queries';
 import { generateChatCompletion } from '@/core/ai/chat';
+import { retrieveRelevantTasks } from '@/modules/rag/retriever';
 
 const RATE_LIMIT_PER_WINDOW = Number(process.env.CHAT_RATE_LIMIT_REQUESTS || 20);
 const RATE_LIMIT_WINDOW_MINUTES = Number(process.env.CHAT_RATE_LIMIT_WINDOW_MINUTES || 1);
@@ -61,11 +62,29 @@ export async function sendChatMessage(
       content: message,
     });
 
+    // RAG: retrieve relevant tasks for context
+    let systemPrompt = 'You are a helpful AI project management assistant.';
+    try {
+      const relevantTasks = await retrieveRelevantTasks(message, { projectId });
+      if (relevantTasks.length > 0) {
+        const taskContext = relevantTasks
+          .map(
+            (t) =>
+              `- [${t.status}/${t.priority}] ${t.title}${t.description ? `: ${t.description}` : ''}`
+          )
+          .join('\n');
+        systemPrompt += `\n\nHere are relevant tasks from this project:\n${taskContext}\n\nUse this context to provide informed, specific answers about the project. Reference task names and statuses when relevant.`;
+      }
+    } catch (err) {
+      console.warn('RAG retrieval failed, continuing without context:', err);
+    }
+
     let completion;
     try {
       completion = await generateChatCompletion({
         message,
         history: historyForModel,
+        systemPrompt,
       });
     } catch (error) {
       const fallback = 'I could not generate a response right now. Please try again in a moment.';

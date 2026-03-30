@@ -84,6 +84,10 @@ export const tasks = pgTable('tasks', {
   assigneeId: text('assignee_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  tags: jsonb('tags').$type<string[]>().default([]),
+  aiMetadata: jsonb('ai_metadata').$type<Record<string, unknown>>().default({}),
+  aiGenerated: boolean('ai_generated').notNull().default(false),
+  storyPoints: integer('story_points'),
 });
 
 // ─── Task Events ──────────────────────────────────────────────────────────────

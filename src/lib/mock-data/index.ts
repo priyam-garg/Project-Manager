@@ -88,6 +88,10 @@ export function generateMockTask(input: Partial<import('@/types').CreateTaskInpu
     assigneeId: input.assigneeId || randomUser.id,
     createdAt: new Date(),
     updatedAt: new Date(),
+    tags: [],
+    aiMetadata: {},
+    aiGenerated: false,
+    storyPoints: null,
   };
 }
 
@@ -143,6 +147,7 @@ export function generateMockProjects(count: number): import('@/core/db/schema').
     id: `project-${i + 1}`,
     name: projectNames[i % projectNames.length],
     description: projectDescriptions[i % projectDescriptions.length],
+    ownerId: mockUsers[0].id,
     createdAt: new Date(Date.now() - (count - i) * 7 * 24 * 60 * 60 * 1000),
     updatedAt: new Date(),
   }));

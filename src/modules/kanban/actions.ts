@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { upsertTaskVector, deleteTaskVector } from '@/modules/rag/sync';
 import type { Task, TaskStatus } from '@/core/db/schema';
 import type { CreateTaskInput, UpdateTaskInput, ApiResponse } from '@/types';
 import { getAuthUser } from '@/core/auth';
@@ -51,6 +53,7 @@ export async function createTask(input: CreateTaskInput): Promise<ApiResponse<Ta
       user.id
     );
     revalidatePath(`/projects/${input.projectId}/board`);
+    after(() => upsertTaskVector(task).catch((e) => console.error('Vector sync failed:', e)));
     return { success: true, data: task };
   } catch (error) {
     console.error('Failed to create task:', error);
@@ -78,6 +81,7 @@ export async function updateTask(input: UpdateTaskInput): Promise<ApiResponse<Ta
     }
 
     revalidatePath(`/projects/${input.projectId}/board`);
+    after(() => upsertTaskVector(task).catch((e) => console.error('Vector sync failed:', e)));
     return { success: true, data: task };
   } catch (error) {
     console.error('Failed to update task:', error);
@@ -93,6 +97,7 @@ export async function deleteTask(
     const user = await getAuthUser();
     await dbDeleteTask(taskId, user.id);
     revalidatePath(`/projects/${projectId}/board`);
+    after(() => deleteTaskVector(taskId).catch((e) => console.error('Vector delete failed:', e)));
     return { success: true };
   } catch (error) {
     console.error('Failed to delete task:', error);
@@ -113,6 +118,7 @@ export async function moveTask(
       return { success: false, error: 'Task not found' };
     }
 
+    after(() => upsertTaskVector(task).catch((e) => console.error('Vector sync failed:', e)));
     return { success: true, data: task };
   } catch (error) {
     console.error('Failed to move task:', error);

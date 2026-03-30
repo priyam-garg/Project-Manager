@@ -3,6 +3,7 @@ import { getModel, type SupportedModelProvider } from './models';
 export type ChatCompletionInput = {
   message: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  systemPrompt?: string;
   timeoutMs?: number;
 };
 
@@ -51,6 +52,7 @@ async function callOpenAIProvider(input: {
   timeoutMs: number;
   message: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  systemPrompt?: string;
 }): Promise<ProviderResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), input.timeoutMs);
@@ -67,7 +69,7 @@ async function callOpenAIProvider(input: {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful AI project management assistant.',
+            content: input.systemPrompt || 'You are a helpful AI project management assistant.',
           },
           ...input.history.map((h) => ({ role: h.role, content: h.content })),
           { role: 'user', content: input.message },
@@ -135,6 +137,7 @@ export async function generateChatCompletion(
         timeoutMs,
         message: input.message,
         history: input.history,
+        systemPrompt: input.systemPrompt,
       });
 
       return {
