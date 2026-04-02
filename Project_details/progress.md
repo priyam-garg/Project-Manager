@@ -1,15 +1,20 @@
 # 🚀 Project Nexus: Implementation Status Report
 
-## 0. 📝 Latest Update (23/03/2026)
+## 0. 📝 Latest Update (31/03/2026)
 
-* Implemented **real AI chat integration** — chat responses are no longer mock-generated.
-* Built multi-provider AI layer (`src/core/ai/chat.ts`, `src/core/ai/models.ts`) supporting OpenAI, Gemini, and Anthropic.
-* Added **AI telemetry tracking** — new `chat_message_metrics` table logs provider, model, latency, token usage, retry count, and error status per message.
-* Added **chat rate limiting** — new `chat_rate_limits` table with sliding window per user/project (default 20 req/min).
-* Chat actions now call real LLM with conversation history (last 20 messages) and graceful error fallback.
-* Added duplicate message prevention in chat store.
+* Implemented **Context-Aware Chat via RAG** — AI chat is now aware of project tasks and can answer specific questions about them.
+* Integrated **Qdrant vector database** (`src/modules/rag/qdrant.ts`) for task vector storage with singleton client and auto-collection creation.
+* Built **task embedding pipeline** (`src/core/ai/embedding.ts`) using Gemini `text-embedding-004` via OpenAI-compatible API.
+* Built **hybrid retriever** (`src/modules/rag/retriever.ts`) — combines vector similarity search with SQL-style filters (project_id, status, priority) and score threshold (0.3).
+* **Auto-vectorization** on task create/update/move/delete via Next.js `after()` API (background, non-blocking) in `src/modules/kanban/actions.ts`.
+* Built **vector sync module** (`src/modules/rag/sync.ts`) — `upsertTaskVector` and `deleteTaskVector` for keeping Qdrant in sync with PostgreSQL.
+* Added **backfill API** (`src/app/api/rag/backfill/route.ts`) for syncing existing tasks to the vector database.
+* RAG-retrieved task context is injected into the chat system prompt before calling the LLM, with graceful fallback if retrieval fails.
+* Added **new task columns**: `tags` (jsonb), `ai_metadata` (jsonb), `ai_generated` (boolean), `story_points` (integer) to the tasks schema.
+* New Drizzle migration: `0002_acoustic_ezekiel_stane.sql`.
 
 ### Previous Updates
+* (23/03/2026) Implemented real AI chat integration with multi-provider support (OpenAI, Gemini, Anthropic). Added AI telemetry tracking and chat rate limiting.
 * (18/03/2026) Replaced hardcoded task activity users with real actor data from `task_events` + `users` join. Improved activity text to show friendly status labels.
 * (18/03/2026) Added Google OAuth authentication.
 
@@ -26,6 +31,8 @@
 * **Database & ORM:** PostgreSQL (Supabase), Drizzle ORM
 * **Authentication:** Supabase (Email/Password + Google OAuth)
 * **AI Providers:** OpenAI (default), Gemini, Anthropic — configurable via env vars
+* **Vector Database:** Qdrant (for RAG task embeddings)
+* **Embedding Model:** Gemini `text-embedding-004` via OpenAI-compatible API
 
 ### 📦 Key Libraries
 
@@ -33,6 +40,7 @@
 * `recharts` → Data visualization
 * `react-hook-form` + `zod` → Form handling & validation
 * `lucide-react` → Icons
+* `@qdrant/js-client-rest` → Vector database client for RAG
 
 ### ⚙️ Build Configuration
 
@@ -54,7 +62,7 @@
   * `users` — user profiles synced from Supabase auth
   * `projects` — with `owner_id` FK → users
   * `project_members` — links users↔projects with role enum (`owner`, `admin`, `member`)
-  * `tasks` — with `ON DELETE CASCADE` to projects, `SET NULL` on assignee
+  * `tasks` — with `ON DELETE CASCADE` to projects, `SET NULL` on assignee; includes `tags` (jsonb), `ai_metadata` (jsonb), `ai_generated` (boolean), `story_points` (integer)
   * `taskEvents` — audit trail for task changes, `ON DELETE CASCADE` to tasks
   * `chatMessages` — persists chat conversations per project
   * `chatMessageMetrics` — **NEW** — AI telemetry per assistant message (provider, model, latency, tokens, errors)
@@ -85,6 +93,14 @@
   * `agent.ts` — `saveGeneration`, `getGenerationHistory`, `updateGenerationAcceptedCount`
 
 * Barrel export via `index.ts`
+
+### 🔍 RAG Pipeline (`src/modules/rag/`)
+
+* **3 modules** powering context-aware AI chat:
+
+  * `qdrant.ts` — Qdrant client singleton, auto-collection creation with payload indexes (project_id, status, priority)
+  * `retriever.ts` — Hybrid search: vector similarity + metadata filters, returns top-K tasks above score threshold (0.3)
+  * `sync.ts` — `upsertTaskVector` / `deleteTaskVector` for keeping Qdrant in sync with PostgreSQL on every task mutation
 
 ### 🧾 Types (`src/types/index.ts`)
 
@@ -266,10 +282,10 @@ All server actions use **real PostgreSQL queries** via Drizzle ORM with **authen
 #### 🔗 Backend
 
 * `getTasks` — fetches tasks from PostgreSQL by project
-* `createTask` — inserts task + logs `created` event
-* `updateTask` — updates task + logs `updated` event
-* `deleteTask` — logs `deleted` event + removes task
-* `moveTask` — updates status + logs `status_changed` event with old/new values
+* `createTask` — inserts task + logs `created` event + auto-syncs vector to Qdrant (background via `after()`)
+* `updateTask` — updates task + logs `updated` event + auto-syncs vector to Qdrant (background via `after()`)
+* `deleteTask` — logs `deleted` event + removes task + deletes vector from Qdrant (background via `after()`)
+* `moveTask` — updates status + logs `status_changed` event with old/new values + auto-syncs vector to Qdrant (background via `after()`)
 
 ---
 
@@ -293,6 +309,7 @@ All server actions use **real PostgreSQL queries** via Drizzle ORM with **authen
 * `loadChatHistory` — loads conversation from database
 * `clearChat` — clears all messages for a project
 * **AI Integration: COMPLETE** — Multi-provider support (OpenAI, Gemini, Anthropic) with retry logic, timeout handling, and graceful error fallback
+* **RAG Context Injection: COMPLETE** — Chat retrieves relevant tasks from Qdrant vector DB and injects them into the system prompt for context-aware responses
 * **Rate Limiting** — Sliding window rate limiter (default: 20 requests/minute per user/project)
 * **Telemetry** — Every AI response tracked with provider, model, latency, token counts, retry count, error status
 
@@ -420,23 +437,24 @@ Project Nexus has achieved:
 * **Working project creation flow** with form validation and auto-navigation
 * **Project-aware sidebar** that validates selected project against real data
 * **Real AI chat integration** with multi-provider support (OpenAI/Gemini/Anthropic), rate limiting, and telemetry
+* **Context-aware RAG chat** — Qdrant vector DB with Gemini embeddings, auto-sync on task mutations, hybrid retrieval with metadata filters
 * **Task event tracking** with real user data and friendly status labels
 
 ---
 
 ### 🔮 Remaining — Ordered by Priority (Next Steps)
 
-#### Step 1: Context-Aware Chat via RAG (Roadmap Section 4)
+#### ~~Step 1: Context-Aware Chat via RAG (Roadmap Section 4)~~ ✅ COMPLETED (31/03/2026)
 > **Goal:** Make the AI chat aware of project tasks so it can answer questions like "What high-priority tasks are blocking?"
 
-* Enable `pgvector` extension on Supabase PostgreSQL
-* Add `embedding` column (vector, 1536 dimensions) to `tasks` table
-* Add HNSW index on embedding column for fast similarity search
-* Build vectorization pipeline (`src/core/ai/embedding.ts`) using OpenAI `text-embedding-3-small`
-* Auto-generate embeddings on task create/update via `after()` API (background, non-blocking)
-* Build hybrid search retriever (`src/modules/rag/retriever.ts`) — combines vector similarity + SQL filters (project_id, status, priority)
-* Inject retrieved task context into chat system prompt before calling LLM
-* Add `tags` (jsonb) and `ai_metadata` (jsonb) columns to tasks for richer semantic search
+* ~~Enable `pgvector` extension~~ → Used **Qdrant** vector database instead (external, managed via `@qdrant/js-client-rest`)
+* ~~Add `embedding` column to `tasks` table~~ → Vectors stored in Qdrant collection with payload indexes on `project_id`, `status`, `priority`
+* ✅ Build vectorization pipeline (`src/core/ai/embedding.ts`) using Gemini `text-embedding-004`
+* ✅ Auto-generate embeddings on task create/update/move/delete via `after()` API (background, non-blocking)
+* ✅ Build hybrid search retriever (`src/modules/rag/retriever.ts`) — combines vector similarity + metadata filters
+* ✅ Inject retrieved task context into chat system prompt before calling LLM
+* ✅ Add `tags` (jsonb), `ai_metadata` (jsonb), `ai_generated` (boolean), `story_points` (integer) columns to tasks
+* ✅ Backfill API endpoint (`/api/rag/backfill`) for syncing existing tasks
 
 #### Step 2: Senior Architect Agent (Roadmap Section 5)
 > **Goal:** Replace mock task generation with a real LangGraph-powered agent that decomposes requirements into tasks
@@ -446,7 +464,7 @@ Project Nexus has achieved:
 * Build LangGraph state machine (`src/modules/architect/graph.ts`) with Plan → Critique → Execute loop
 * Add `tech_stack` (jsonb) and `architectural_guidelines` (text) columns to `projects` table
 * Wire architect agent into existing `generateTasks` server action (replace mock)
-* Add `ai_generated` (boolean) and `story_points` (integer) columns to tasks
+* ~~Add `ai_generated` (boolean) and `story_points` (integer) columns to tasks~~ ✅ Already added in Step 1
 
 #### Step 3: AI-Powered Insight Narratives (Roadmap Section 6)
 > **Goal:** Feed existing analytics data into LLM to generate narrative reports with actionable recommendations
