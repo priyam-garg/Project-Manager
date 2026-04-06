@@ -14,11 +14,12 @@ import {
   updateGenerationAcceptedCount,
 } from '@/core/db/queries';
 import { bulkCreateTasks } from '@/core/db/queries';
-import { generateMockTaskGeneration } from '@/lib/mock-data';
+import { getProjectById } from '@/core/db/queries';
+import { runArchitectGraph } from '@/modules/architect/graph';
 
 /**
- * Generate tasks from a requirement.
- * AI generation is still mock — the result is persisted to the database.
+ * Generate tasks from a requirement using the LangGraph architect agent.
+ * The agent performs a Plan → Critique → Finalize loop for high-quality decomposition.
  */
 export async function generateTasks(
   request: TaskGenerationRequest
@@ -26,8 +27,34 @@ export async function generateTasks(
   try {
     const user = await getAuthUser();
 
-    // Generate tasks (still mock — AI integration is a separate feature)
-    const result = generateMockTaskGeneration(request.requirement);
+    // Fetch project context for the architect agent
+    const project = await getProjectById(request.projectId);
+
+    // Run the LangGraph architect agent
+    const architectResult = await runArchitectGraph({
+      requirement: request.requirement,
+      projectName: project?.name,
+      projectDescription: project?.description ?? undefined,
+      techStack: request.techStack ?? project?.techStack ?? [],
+      architecturalGuidelines:
+        request.architecturalGuidelines ??
+        project?.architecturalGuidelines ??
+        undefined,
+    });
+
+    // Map architect output to the existing GeneratedTask format
+    const generatedTasks: GeneratedTask[] = architectResult.tasks.map((t) => ({
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+      storyPoints: t.storyPoints,
+      tags: t.tags,
+    }));
+
+    const result: TaskGenerationResponse = {
+      tasks: generatedTasks,
+      reasoning: architectResult.reasoning,
+    };
 
     // Persist the generation record
     await saveGeneration({
@@ -41,12 +68,15 @@ export async function generateTasks(
     return { success: true, data: result };
   } catch (error) {
     console.error('Failed to generate tasks:', error);
-    return { success: false, error: 'Failed to generate tasks' };
+    const message =
+      error instanceof Error ? error.message : 'Failed to generate tasks';
+    return { success: false, error: message };
   }
 }
 
 /**
  * Accept generated tasks and create them in the project.
+ * Sets ai_generated flag and stores AI metadata.
  */
 export async function acceptGeneratedTasks(
   projectId: string,
@@ -61,6 +91,13 @@ export async function acceptGeneratedTasks(
         title: t.title,
         description: t.description,
         priority: t.priority,
+        storyPoints: t.storyPoints,
+        tags: t.tags,
+        aiGenerated: true,
+        aiMetadata: {
+          source: 'architect-agent',
+          generatedAt: new Date().toISOString(),
+        },
       })),
       user.id
     );
@@ -77,7 +114,16 @@ export async function acceptGeneratedTasks(
  */
 export async function getGenerationHistory(
   projectId: string
-): Promise<ApiResponse<Array<{ id: string; requirement: string; taskCount: number; createdAt: Date }>>> {
+): Promise<
+  ApiResponse<
+    Array<{
+      id: string;
+      requirement: string;
+      taskCount: number;
+      createdAt: Date;
+    }>
+  >
+> {
   try {
     await getAuthUser();
     const history = await dbGetGenerationHistory(projectId);
@@ -87,7 +133,9 @@ export async function getGenerationHistory(
       data: history.map((g) => ({
         id: g.id,
         requirement: g.requirement,
-        taskCount: Array.isArray(g.generatedTasks) ? g.generatedTasks.length : 0,
+        taskCount: Array.isArray(g.generatedTasks)
+          ? g.generatedTasks.length
+          : 0,
         createdAt: g.createdAt,
       })),
     };

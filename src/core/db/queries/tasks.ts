@@ -197,6 +197,10 @@ export async function bulkCreateTasks(
     title: string;
     description?: string;
     priority?: 'low' | 'medium' | 'high';
+    storyPoints?: number;
+    tags?: string[];
+    aiGenerated?: boolean;
+    aiMetadata?: Record<string, unknown>;
   }>,
   userId: string
 ): Promise<Task[]> {
@@ -211,6 +215,10 @@ export async function bulkCreateTasks(
     status: 'backlog' as TaskStatus,
     priority: item.priority ?? ('medium' as const),
     assigneeId: null,
+    storyPoints: item.storyPoints ?? null,
+    tags: item.tags ?? [],
+    aiGenerated: item.aiGenerated ?? false,
+    aiMetadata: item.aiMetadata ?? {},
     createdAt: now,
     updatedAt: now,
   }));

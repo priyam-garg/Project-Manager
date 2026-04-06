@@ -79,11 +79,15 @@ export type GeneratedTask = {
   description: string;
   priority: TaskPriority;
   estimatedHours?: number;
+  storyPoints?: number;
+  tags?: string[];
 };
 
 export type TaskGenerationRequest = {
   projectId: string;
   requirement: string;
+  techStack?: string[];
+  architecturalGuidelines?: string;
 };
 
 export type TaskGenerationResponse = {

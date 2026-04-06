@@ -52,6 +52,8 @@ export const projects = pgTable('projects', {
   ownerId: text('owner_id')
     .notNull()
     .references(() => users.id),
+  techStack: jsonb('tech_stack').$type<string[]>().default([]),
+  architecturalGuidelines: text('architectural_guidelines'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
