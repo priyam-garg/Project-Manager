@@ -1,19 +1,19 @@
 # 🚀 Project Nexus: Implementation Status Report
 
-## 0. 📝 Latest Update (31/03/2026)
+## 0. 📝 Latest Update (07/04/2026)
 
-* Implemented **Context-Aware Chat via RAG** — AI chat is now aware of project tasks and can answer specific questions about them.
-* Integrated **Qdrant vector database** (`src/modules/rag/qdrant.ts`) for task vector storage with singleton client and auto-collection creation.
-* Built **task embedding pipeline** (`src/core/ai/embedding.ts`) using Gemini `text-embedding-004` via OpenAI-compatible API.
-* Built **hybrid retriever** (`src/modules/rag/retriever.ts`) — combines vector similarity search with SQL-style filters (project_id, status, priority) and score threshold (0.3).
-* **Auto-vectorization** on task create/update/move/delete via Next.js `after()` API (background, non-blocking) in `src/modules/kanban/actions.ts`.
-* Built **vector sync module** (`src/modules/rag/sync.ts`) — `upsertTaskVector` and `deleteTaskVector` for keeping Qdrant in sync with PostgreSQL.
-* Added **backfill API** (`src/app/api/rag/backfill/route.ts`) for syncing existing tasks to the vector database.
-* RAG-retrieved task context is injected into the chat system prompt before calling the LLM, with graceful fallback if retrieval fails.
-* Added **new task columns**: `tags` (jsonb), `ai_metadata` (jsonb), `ai_generated` (boolean), `story_points` (integer) to the tasks schema.
-* New Drizzle migration: `0002_acoustic_ezekiel_stane.sql`.
+* Implemented **Senior Architect Agent** — replaced mock task generation with a real LangGraph-powered AI agent.
+* Built **LangGraph state machine** (`src/modules/architect/graph.ts`) with Plan → Critique → Finalize loop (max 2 iterations).
+* Defined **Zod schemas** (`src/modules/architect/schemas.ts`) for structured output: `TaskSchema`, `ArchitectOutputSchema`, `CritiqueSchema`.
+* Created **architect prompts** (`src/modules/architect/prompts.ts`) with Planner, Critic, and Finalizer roles for multi-step reasoning.
+* **Wired into `generateTasks` server action** — `src/modules/agent/actions.ts` now calls `runArchitectGraph()` with project context (name, description, tech stack, guidelines).
+* Added **`tech_stack` (jsonb) and `architectural_guidelines` (text)** columns to `projects` table.
+* Accepted tasks are flagged with `aiGenerated: true` and `aiMetadata: { source: 'architect-agent', generatedAt }`.
+* Multi-provider LLM support in architect (OpenAI/Gemini), JSON extraction helper for markdown code blocks.
+* New Drizzle migration: `0003_even_zaladane.sql`.
 
 ### Previous Updates
+* (31/03/2026) Implemented Context-Aware Chat via RAG — Qdrant vector DB, Gemini embeddings, hybrid retriever, auto-vectorization on task mutations, backfill API. Added `tags`, `ai_metadata`, `ai_generated`, `story_points` columns to tasks.
 * (23/03/2026) Implemented real AI chat integration with multi-provider support (OpenAI, Gemini, Anthropic). Added AI telemetry tracking and chat rate limiting.
 * (18/03/2026) Replaced hardcoded task activity users with real actor data from `task_events` + `users` join. Improved activity text to show friendly status labels.
 * (18/03/2026) Added Google OAuth authentication.
@@ -41,6 +41,7 @@
 * `react-hook-form` + `zod` → Form handling & validation
 * `lucide-react` → Icons
 * `@qdrant/js-client-rest` → Vector database client for RAG
+* `@langchain/langgraph` + `@langchain/openai` → LangGraph state machine for architect agent
 
 ### ⚙️ Build Configuration
 
@@ -60,7 +61,7 @@
 * **9 tables total** (4 original + 5 new):
 
   * `users` — user profiles synced from Supabase auth
-  * `projects` — with `owner_id` FK → users
+  * `projects` — with `owner_id` FK → users; includes `tech_stack` (jsonb), `architectural_guidelines` (text)
   * `project_members` — links users↔projects with role enum (`owner`, `admin`, `member`)
   * `tasks` — with `ON DELETE CASCADE` to projects, `SET NULL` on assignee; includes `tags` (jsonb), `ai_metadata` (jsonb), `ai_generated` (boolean), `story_points` (integer)
   * `taskEvents` — audit trail for task changes, `ON DELETE CASCADE` to tasks
@@ -114,9 +115,9 @@
 
 ### 🧪 Mock Environment (`src/lib/mock-data/`)
 
-* Retained for AI response simulation (chat & agent modules)
-* Frontend dev can still use mock data if DATABASE_URL is not configured
+* Retained for fallback/dev scenarios if API keys are not configured
 * Mock functions: `generateMockChatResponse`, `generateMockTaskGeneration`
+* Note: Both chat and agent now use real AI — mocks are legacy fallbacks only
 
 ---
 
@@ -337,10 +338,18 @@ All server actions use **real PostgreSQL queries** via Drizzle ORM with **authen
 
 #### 🔗 Backend
 
-* `generateTasks` — mock AI generation + persists record to `agentGenerations` table
-* `acceptGeneratedTasks` — bulk creates tasks via `bulkCreateTasks` with event logging
+* `generateTasks` — runs **LangGraph architect agent** (Plan → Critique → Finalize loop) with project context, persists record to `agentGenerations` table
+* `acceptGeneratedTasks` — bulk creates tasks via `bulkCreateTasks` with `aiGenerated: true` flag and `aiMetadata` (source, timestamp)
 * `getGenerationHistory` — retrieves past generations from database
-* *AI generation still mock (AI integration is a future feature)*
+* **AI Generation: COMPLETE** — Real LangGraph-powered agent with Zod-validated structured output, multi-provider LLM support (OpenAI/Gemini)
+
+#### 🏗️ Architect Agent (`src/modules/architect/`)
+
+* **3 modules** powering intelligent task decomposition:
+
+  * `graph.ts` — LangGraph `StateGraph` with 3 nodes (Planner, Critic, Finalizer), conditional re-planning (max 2 iterations), multi-provider LLM via raw fetch
+  * `schemas.ts` — Zod schemas: `TaskSchema` (title, description, priority, storyPoints, tags), `ArchitectOutputSchema`, `CritiqueSchema` (issues with severity + suggestion, overall assessment)
+  * `prompts.ts` — Role-based system prompts: Senior Architect (planner), Staff Engineer (critic), Senior Architect (finalizer)
 
 ---
 
@@ -438,6 +447,7 @@ Project Nexus has achieved:
 * **Project-aware sidebar** that validates selected project against real data
 * **Real AI chat integration** with multi-provider support (OpenAI/Gemini/Anthropic), rate limiting, and telemetry
 * **Context-aware RAG chat** — Qdrant vector DB with Gemini embeddings, auto-sync on task mutations, hybrid retrieval with metadata filters
+* **LangGraph architect agent** — real AI task decomposition with Plan → Critique → Finalize loop, structured Zod output, replacing all mock generation
 * **Task event tracking** with real user data and friendly status labels
 
 ---
@@ -456,15 +466,16 @@ Project Nexus has achieved:
 * ✅ Add `tags` (jsonb), `ai_metadata` (jsonb), `ai_generated` (boolean), `story_points` (integer) columns to tasks
 * ✅ Backfill API endpoint (`/api/rag/backfill`) for syncing existing tasks
 
-#### Step 2: Senior Architect Agent (Roadmap Section 5)
+#### ~~Step 2: Senior Architect Agent (Roadmap Section 5)~~ ✅ COMPLETED (07/04/2026)
 > **Goal:** Replace mock task generation with a real LangGraph-powered agent that decomposes requirements into tasks
 
-* Install `@langchain/openai`, `@langchain/langgraph`
-* Define Zod schemas for structured agent output (`TaskSchema`, `ArchitectOutputSchema`)
-* Build LangGraph state machine (`src/modules/architect/graph.ts`) with Plan → Critique → Execute loop
-* Add `tech_stack` (jsonb) and `architectural_guidelines` (text) columns to `projects` table
-* Wire architect agent into existing `generateTasks` server action (replace mock)
-* ~~Add `ai_generated` (boolean) and `story_points` (integer) columns to tasks~~ ✅ Already added in Step 1
+* ✅ Install `@langchain/openai`, `@langchain/langgraph`
+* ✅ Define Zod schemas for structured agent output (`TaskSchema`, `ArchitectOutputSchema`, `CritiqueSchema`) in `src/modules/architect/schemas.ts`
+* ✅ Build LangGraph state machine (`src/modules/architect/graph.ts`) with Plan → Critique → Finalize loop (max 2 iterations)
+* ✅ Add `tech_stack` (jsonb) and `architectural_guidelines` (text) columns to `projects` table
+* ✅ Wire architect agent into existing `generateTasks` server action (replace mock) — `runArchitectGraph()` with full project context
+* ✅ `ai_generated` (boolean) and `story_points` (integer) columns on tasks (added in Step 1)
+* ✅ Accepted tasks flagged with `aiGenerated: true` and `aiMetadata: { source: 'architect-agent' }`
 
 #### Step 3: AI-Powered Insight Narratives (Roadmap Section 6)
 > **Goal:** Feed existing analytics data into LLM to generate narrative reports with actionable recommendations

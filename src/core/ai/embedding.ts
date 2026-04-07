@@ -16,16 +16,18 @@ export async function generateEmbedding(input: string): Promise<number[]> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
 
-  const model = process.env.EMBEDDING_MODEL || 'text-embedding-004';
-  const baseUrl = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai';
+  const model = process.env.EMBEDDING_MODEL || 'gemini-embedding-001';
 
-  const response = await fetch(`${baseUrl}/embeddings`, {
+  // Use the native Gemini embedContent endpoint (v1beta for newer models)
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ input, model }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: `models/${model}`,
+      content: { parts: [{ text: input }] },
+    }),
   });
 
   if (!response.ok) {
@@ -34,8 +36,8 @@ export async function generateEmbedding(input: string): Promise<number[]> {
   }
 
   const payload = (await response.json()) as {
-    data: Array<{ embedding: number[] }>;
+    embedding: { values: number[] };
   };
 
-  return payload.data[0].embedding;
+  return payload.embedding.values;
 }

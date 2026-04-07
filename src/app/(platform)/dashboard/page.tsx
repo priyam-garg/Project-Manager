@@ -16,12 +16,12 @@ export default function ProjectsDashboardPage() {
   const { setCurrentProject } = useProjectsStore();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  // Redirect to first project if only one exists
+  // Auto-select project if only one exists (without redirecting away from dashboard)
   useEffect(() => {
     if (!isLoading && projects.length === 1) {
-      router.push(`/projects/${projects[0].id}/board`);
+      setCurrentProject(projects[0].id);
     }
-  }, [projects, isLoading, router]);
+  }, [projects, isLoading, setCurrentProject]);
 
   if (isLoading) {
     return (
