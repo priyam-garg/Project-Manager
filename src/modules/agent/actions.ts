@@ -16,6 +16,7 @@ import {
 import { bulkCreateTasks } from '@/core/db/queries';
 import { getProjectById } from '@/core/db/queries';
 import { runArchitectGraph } from '@/modules/architect/graph';
+import { retrieveRelevantTasks } from '@/modules/rag/retriever';
 
 /**
  * Generate tasks from a requirement using the LangGraph architect agent.
@@ -30,6 +31,25 @@ export async function generateTasks(
     // Fetch project context for the architect agent
     const project = await getProjectById(request.projectId);
 
+    // RAG: retrieve existing tasks so the agent avoids duplicates
+    let existingTasksContext = '';
+    try {
+      const relevantTasks = await retrieveRelevantTasks(
+        request.requirement,
+        { projectId: request.projectId },
+        15
+      );
+      if (relevantTasks.length > 0) {
+        existingTasksContext = relevantTasks
+          .map(
+            (t) => `- [${t.status}/${t.priority}] ${t.title}${t.description ? `: ${t.description}` : ''}`
+          )
+          .join('\n');
+      }
+    } catch (err) {
+      console.warn('RAG retrieval failed for agent, continuing without context:', err);
+    }
+
     // Run the LangGraph architect agent
     const architectResult = await runArchitectGraph({
       requirement: request.requirement,
@@ -40,6 +60,7 @@ export async function generateTasks(
         request.architecturalGuidelines ??
         project?.architecturalGuidelines ??
         undefined,
+      existingTasks: existingTasksContext || undefined,
     });
 
     // Map architect output to the existing GeneratedTask format

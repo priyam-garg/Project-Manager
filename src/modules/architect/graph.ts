@@ -16,6 +16,7 @@ const ArchitectAnnotation = Annotation.Root({
   projectDescription: Annotation<string>,
   techStack: Annotation<string[]>,
   architecturalGuidelines: Annotation<string>,
+  existingTasks: Annotation<string>,
 
   // Internal
   plan: Annotation<ArchitectOutputType | null>,
@@ -144,6 +145,8 @@ function buildProjectContext(state: ArchitectState): string {
     parts.push(`Tech Stack: ${state.techStack.join(', ')}`);
   if (state.architecturalGuidelines)
     parts.push(`Architectural Guidelines:\n${state.architecturalGuidelines}`);
+  if (state.existingTasks)
+    parts.push(`\nExisting Tasks in Project (DO NOT duplicate these — build on top of them or reference them as dependencies):\n${state.existingTasks}`);
   return parts.length > 0
     ? `\n\nProject Context:\n${parts.join('\n')}`
     : '';
@@ -236,6 +239,7 @@ export type ArchitectInput = {
   projectDescription?: string;
   techStack?: string[];
   architecturalGuidelines?: string;
+  existingTasks?: string;
 };
 
 export type ArchitectResult = {
@@ -254,6 +258,7 @@ export async function runArchitectGraph(
     projectDescription: input.projectDescription || '',
     techStack: input.techStack || [],
     architecturalGuidelines: input.architecturalGuidelines || '',
+    existingTasks: input.existingTasks || '',
     plan: null,
     critique: null,
     iteration: 0,
