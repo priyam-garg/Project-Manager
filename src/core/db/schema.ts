@@ -172,6 +172,32 @@ export const agentGenerations = pgTable('agent_generations', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ─── Implementation Plans ─────────────────────────────────────────────────────
+
+export type PlanSection = {
+  id: string;
+  phase: string;
+  phaseNumber: number;
+  sectionType: 'overview' | 'goals' | 'tasks' | 'deliverables';
+  content: string;
+  items: string[];
+};
+
+export const implementationPlans = pgTable('implementation_plans', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull().default(1),
+  content: text('content').notNull(),
+  sections: jsonb('sections').$type<PlanSection[]>().default([]),
+  source: text('source').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -192,6 +218,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   chatMessages: many(chatMessages),
   chatRateLimits: many(chatRateLimits),
   agentGenerations: many(agentGenerations),
+  implementationPlans: many(implementationPlans),
 }));
 
 export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
@@ -268,6 +295,17 @@ export const agentGenerationsRelations = relations(agentGenerations, ({ one }) =
   }),
 }));
 
+export const implementationPlansRelations = relations(implementationPlans, ({ one }) => ({
+  project: one(projects, {
+    fields: [implementationPlans.projectId],
+    references: [projects.id],
+  }),
+  creator: one(users, {
+    fields: [implementationPlans.createdBy],
+    references: [users.id],
+  }),
+}));
+
 // ─── Type Exports ─────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -279,6 +317,7 @@ export type ChatMessageRecord = typeof chatMessages.$inferSelect;
 export type ChatMessageMetric = typeof chatMessageMetrics.$inferSelect;
 export type ChatRateLimit = typeof chatRateLimits.$inferSelect;
 export type AgentGeneration = typeof agentGenerations.$inferSelect;
+export type ImplementationPlan = typeof implementationPlans.$inferSelect;
 export type TaskStatus = (typeof taskStatusEnum.enumValues)[number];
 export type TaskPriority = (typeof taskPriorityEnum.enumValues)[number];
 export type EventType = (typeof eventTypeEnum.enumValues)[number];

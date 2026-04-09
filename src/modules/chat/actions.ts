@@ -62,22 +62,86 @@ export async function sendChatMessage(
       content: message,
     });
 
-    // RAG: retrieve relevant tasks for context
-    let systemPrompt = 'You are a helpful AI project management assistant.';
+    // Inject full board state — all tasks grouped by status for accurate analysis
+    let systemPrompt = `You are a helpful AI project management assistant. You have full visibility into this project's board, implementation plan, and metrics. When asked what to work on next, analyze task dependencies, priorities, and the roadmap to give specific, actionable advice. Always use the real data provided below — never guess or hallucinate task names.`;
     try {
-      const relevantTasks = await retrieveRelevantTasks(message, { projectId });
-      if (relevantTasks.length > 0) {
-        const taskContext = relevantTasks
-          .map(
-            (t) =>
-              `- [${t.status}/${t.priority}] ${t.title}${t.description ? `: ${t.description}` : ''}`
-          )
-          .join('\n');
-        systemPrompt += `\n\nHere are relevant tasks from this project:\n${taskContext}\n\nUse this context to provide informed, specific answers about the project. Reference task names and statuses when relevant.`;
+      const { getTasksByProject } = await import('@/core/db/queries/tasks');
+      const allTasks = await getTasksByProject(projectId);
+
+      if (allTasks.length > 0) {
+        const byStatus: Record<string, typeof allTasks> = {
+          done: [],
+          in_progress: [],
+          todo: [],
+          backlog: [],
+        };
+        for (const t of allTasks) {
+          (byStatus[t.status] ?? byStatus.backlog).push(t);
+        }
+
+        const formatTasks = (list: typeof allTasks) =>
+          list
+            .map(
+              (t) =>
+                `  - [${t.priority}] ${t.title}${t.description ? ` — ${t.description.slice(0, 120)}` : ''}`
+            )
+            .join('\n');
+
+        const boardLines: string[] = [
+          `Total: ${allTasks.length} tasks | Done: ${byStatus.done.length} | In Progress: ${byStatus.in_progress.length} | Todo: ${byStatus.todo.length} | Backlog: ${byStatus.backlog.length}`,
+          `Completion rate: ${allTasks.length > 0 ? Math.round((byStatus.done.length / allTasks.length) * 100) : 0}%`,
+        ];
+
+        if (byStatus.done.length > 0) {
+          boardLines.push(`\n✅ DONE (${byStatus.done.length}):\n${formatTasks(byStatus.done)}`);
+        }
+        if (byStatus.in_progress.length > 0) {
+          boardLines.push(`\n🔄 IN PROGRESS (${byStatus.in_progress.length}):\n${formatTasks(byStatus.in_progress)}`);
+        }
+        if (byStatus.todo.length > 0) {
+          boardLines.push(`\n📋 TODO (${byStatus.todo.length}):\n${formatTasks(byStatus.todo)}`);
+        }
+        if (byStatus.backlog.length > 0) {
+          boardLines.push(`\n📥 BACKLOG (${byStatus.backlog.length}):\n${formatTasks(byStatus.backlog)}`);
+        }
+
+        systemPrompt += `\n\n=== PROJECT BOARD (complete, live data) ===\n${boardLines.join('\n')}`;
       }
     } catch (err) {
-      console.warn('RAG retrieval failed, continuing without context:', err);
+      console.warn('Failed to fetch board state for chat context:', err);
+
+      // Fallback to RAG semantic search if full board fetch fails
+      try {
+        const relevantTasks = await retrieveRelevantTasks(message, { projectId });
+        if (relevantTasks.length > 0) {
+          const taskContext = relevantTasks
+            .map(
+              (t) =>
+                `- [${t.status}/${t.priority}] ${t.title}${t.description ? `: ${t.description}` : ''}`
+            )
+            .join('\n');
+          systemPrompt += `\n\nRelevant tasks from this project:\n${taskContext}`;
+        }
+      } catch (ragErr) {
+        console.warn('RAG retrieval also failed:', ragErr);
+      }
     }
+
+    // RAG: retrieve relevant plan sections for context
+    try {
+      const { retrieveRelevantPlanSections } = await import('@/modules/rag/plan-retriever');
+      const planSections = await retrieveRelevantPlanSections(message, projectId);
+      if (planSections.length > 0) {
+        const planContext = planSections
+          .map((s) => `[${s.phase} / ${s.sectionType}] ${s.content}`)
+          .join('\n');
+        systemPrompt += `\n\n=== IMPLEMENTATION PLAN (relevant sections) ===\n${planContext}\n\nWhen suggesting next tasks, cross-reference the board with the roadmap phases. Suggest tasks that align with the current phase and unblock progress.`;
+      }
+    } catch (err) {
+      console.warn('Plan RAG retrieval failed, continuing without plan context:', err);
+    }
+
+
 
     let completion;
     try {

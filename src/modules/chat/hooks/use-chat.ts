@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useChatStore } from '@/stores/chat-store';
 import { loadChatHistory, sendChatMessage } from '../actions';
-import { generateId } from '@/lib/mock-data';
 
 export function useChat(projectId: string) {
   const { getConversation, addMessage, setConversation, isLoading, setLoading } = useChatStore();
@@ -29,7 +28,7 @@ export function useChat(projectId: string) {
   const sendMessage = async (content: string) => {
     // Add user message immediately
     const userMessage = {
-      id: generateId(),
+      id: crypto.randomUUID(),
       role: 'user' as const,
       content,
       timestamp: new Date(),

@@ -13,6 +13,7 @@ import {
   BarChart3,
   X,
   ChevronDown,
+  Map,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -83,6 +84,11 @@ export function Sidebar() {
           name: 'Board',
           href: `/projects/${currentProjectId}/board`,
           icon: LayoutDashboard,
+        },
+        {
+          name: 'Roadmap',
+          href: `/projects/${currentProjectId}/roadmap`,
+          icon: Map,
         },
         {
           name: 'Chat',

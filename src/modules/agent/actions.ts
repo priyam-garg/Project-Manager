@@ -50,18 +50,34 @@ export async function generateTasks(
       console.warn('RAG retrieval failed for agent, continuing without context:', err);
     }
 
+    // Fetch implementation plan for architect context
+    let planContext = '';
+    try {
+      const { getActivePlanContent } = await import('@/core/db/queries/roadmap');
+      const planContent = await getActivePlanContent(request.projectId);
+      if (planContent) {
+        planContext = planContent;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch plan for agent context:', err);
+    }
+
+    // Combine architectural guidelines with plan context
+    const combinedGuidelines = [
+      request.architecturalGuidelines ?? project?.architecturalGuidelines ?? '',
+      planContext ? `\n\nImplementation Plan / Roadmap:\n${planContext}` : '',
+    ].filter(Boolean).join('');
+
     // Run the LangGraph architect agent
     const architectResult = await runArchitectGraph({
       requirement: request.requirement,
       projectName: project?.name,
       projectDescription: project?.description ?? undefined,
       techStack: request.techStack ?? project?.techStack ?? [],
-      architecturalGuidelines:
-        request.architecturalGuidelines ??
-        project?.architecturalGuidelines ??
-        undefined,
+      architecturalGuidelines: combinedGuidelines || undefined,
       existingTasks: existingTasksContext || undefined,
     });
+
 
     // Map architect output to the existing GeneratedTask format
     const generatedTasks: GeneratedTask[] = architectResult.tasks.map((t) => ({

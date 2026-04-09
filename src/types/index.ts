@@ -8,6 +8,8 @@ import type {
   ChatMessageRecord,
   AgentGeneration,
   MemberRole,
+  ImplementationPlan,
+  PlanSection,
 } from '@/core/db/schema';
 
 export type {
@@ -20,6 +22,8 @@ export type {
   ChatMessageRecord,
   AgentGeneration,
   MemberRole,
+  ImplementationPlan,
+  PlanSection,
 };
 
 // API Response Types

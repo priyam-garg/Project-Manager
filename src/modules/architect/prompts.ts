@@ -16,7 +16,8 @@ Rules:
 7. Descriptions should include acceptance criteria — what "done" looks like.
 8. Keep task titles under 80 characters, action-oriented (e.g., "Implement user login endpoint").
 
-If tech stack or architectural guidelines are provided, ensure tasks align with them.`,
+If tech stack or architectural guidelines are provided, ensure tasks align with them.
+If an implementation plan/roadmap is provided, ensure tasks align with the plan's phases, goals, and milestones. Reference specific phases when relevant.`,
 
   /** Critic: reviews a plan for gaps */
   critic: `You are a Staff Engineer performing a thorough code review of a project plan.
