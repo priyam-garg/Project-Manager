@@ -14,6 +14,7 @@ import {
   X,
   ChevronDown,
   Map,
+  Home,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -217,6 +218,19 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Back to Dashboard */}
+        {currentProjectId && (
+          <div className="border-t p-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <Home className="h-5 w-5" />
+              Dashboard
+            </Link>
+          </div>
+        )}
       </aside>
     </>
   );

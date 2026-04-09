@@ -29,9 +29,9 @@ export function Column({ status, tasks, onAddTask }: ColumnProps) {
   const taskIds = tasks.map((task) => task.id);
 
   return (
-    <article className="flex flex-col bg-muted/30 rounded-lg min-h-[500px]">
-      {/* Column Header */}
-      <header className="flex items-center justify-between p-4 border-b border-border">
+    <article className="flex flex-col bg-muted/30 rounded-lg h-full overflow-hidden">
+      {/* Column Header — pinned */}
+      <header className="flex items-center justify-between p-4 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-sm text-foreground">
             {statusLabels[status]}
@@ -42,12 +42,11 @@ export function Column({ status, tasks, onAddTask }: ColumnProps) {
         </div>
       </header>
 
-      {/* Droppable Area with Sortable Context */}
+      {/* Droppable Area — scrollable */}
       <div
         ref={setNodeRef}
         className={cn(
-          'flex-1 p-3 space-y-2 overflow-y-auto',
-          'min-h-[200px]'
+          'flex-1 p-3 space-y-2 overflow-y-auto min-h-0'
         )}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
@@ -64,8 +63,8 @@ export function Column({ status, tasks, onAddTask }: ColumnProps) {
         </SortableContext>
       </div>
 
-      {/* Add Task Button */}
-      <footer className="p-3 border-t border-border">
+      {/* Add Task Button — pinned */}
+      <footer className="p-3 border-t border-border shrink-0">
         <Button
           variant="ghost"
           size="sm"

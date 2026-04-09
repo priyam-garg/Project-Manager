@@ -128,7 +128,7 @@ export function Board({ projectId }: BoardProps) {
   if (isLoading) {
     return (
       <section className={cn(
-        "grid gap-4 p-6",
+        "grid gap-4 p-6 h-full",
         sidebarOpen 
           ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto"
@@ -147,7 +147,7 @@ export function Board({ projectId }: BoardProps) {
       onDragEnd={handleDragEnd}
     >
       <section className={cn(
-        "grid gap-4 p-6",
+        "grid gap-4 p-6 h-full",
         sidebarOpen 
           ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto"

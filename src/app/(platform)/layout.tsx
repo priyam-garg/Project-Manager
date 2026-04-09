@@ -13,14 +13,14 @@ export default function PlatformLayout({
   const { sidebarOpen } = useUIStore();
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden">
+    <div className="relative flex h-screen overflow-hidden">
       {/* Sidebar Navigation */}
       <Sidebar />
 
       {/* Main Content Area */}
       <div
         className={cn(
-          'flex flex-1 flex-col min-w-0 transition-all duration-300',
+          'flex flex-1 flex-col min-w-0 transition-all duration-300 overflow-hidden',
           sidebarOpen ? 'ml-64' : 'ml-0'
         )}
       >

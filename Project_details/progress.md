@@ -1,22 +1,26 @@
 # 🚀 Project Nexus: Implementation Status Report
 
-## 0. 📝 Latest Update (07/04/2026)
+## 0. 📝 Latest Update (10/04/2026)
 
-* Implemented **Senior Architect Agent** — replaced mock task generation with a real LangGraph-powered AI agent.
-* Built **LangGraph state machine** (`src/modules/architect/graph.ts`) with Plan → Critique → Finalize loop (max 2 iterations).
-* Defined **Zod schemas** (`src/modules/architect/schemas.ts`) for structured output: `TaskSchema`, `ArchitectOutputSchema`, `CritiqueSchema`.
-* Created **architect prompts** (`src/modules/architect/prompts.ts`) with Planner, Critic, and Finalizer roles for multi-step reasoning.
-* **Wired into `generateTasks` server action** — `src/modules/agent/actions.ts` now calls `runArchitectGraph()` with project context (name, description, tech stack, guidelines).
-* Added **`tech_stack` (jsonb) and `architectural_guidelines` (text)** columns to `projects` table.
-* Accepted tasks are flagged with `aiGenerated: true` and `aiMetadata: { source: 'architect-agent', generatedAt }`.
-* Multi-provider LLM support in architect (OpenAI/Gemini), JSON extraction helper for markdown code blocks.
-* New Drizzle migration: `0003_even_zaladane.sql`.
+* Implemented **Project Roadmap / Implementation Plan** feature.
+  * Added `implementation_plans` table to store versioned roadmaps (up to 10 versions) in Markdown structure with JSONB phase tracking (`src/core/db/schema.ts`).
+  * Built AI-powered **Plan Generator** (`src/modules/roadmap/plan-generator.ts`) to create full plans or regenerate specific phases.
+  * Integrated **Granular RAG** for the roadmap by vectorizing individual plan sections (Overview, Phases, Goals, Tasks) into Qdrant for precise context retrieval.
+  * Created a mandatory 2-step **Create Project Wizard** ensuring all new projects begin with a structured roadmap.
+  * Built the **`/roadmap` UI** with collapsible phases, inline section editing, and version history.
+* Enhanced **Chat and Agent Context Injection**:
+  * Chat now receives a **complete board snapshot** (all tasks grouped by status) and **live aggregate statistics** (completion rate, counts by status/priority) instead of just semantic vector search matches. This allows the AI to accurately answer aggregate queries (e.g., "how many tasks are done?") and analyze the full board state to suggest "what to work on next".
+  * Both Chat and the Architect Agent now receive relevant roadmap context via Qdrant retrieve calls.
+* **Frontend UI Polish & Cleanup**:
+  * Fixed global page scrolling: Chat and Kanban board now correctly constrain to the viewport (`h-screen overflow-hidden`), allowing internal elements (message list, task columns) to scroll independently without pushing the input/footer out of view.
+  * Added a `Dashboard` home link to the bottom of the sidebar for quick project switching.
+  * Cleaned out leftover legacy mock files (`src/lib/mock-data`).
 
 ### Previous Updates
+* (07/04/2026) Implemented Senior Architect Agent — replaced mock task generation with a real LangGraph-powered AI agent. Built state machine, Zod schemas, structured prompts, and wired into `generateTasks` server action.
 * (31/03/2026) Implemented Context-Aware Chat via RAG — Qdrant vector DB, Gemini embeddings, hybrid retriever, auto-vectorization on task mutations, backfill API. Added `tags`, `ai_metadata`, `ai_generated`, `story_points` columns to tasks.
 * (23/03/2026) Implemented real AI chat integration with multi-provider support (OpenAI, Gemini, Anthropic). Added AI telemetry tracking and chat rate limiting.
-* (18/03/2026) Replaced hardcoded task activity users with real actor data from `task_events` + `users` join. Improved activity text to show friendly status labels.
-* (18/03/2026) Added Google OAuth authentication.
+* (18/03/2026) Replaced hardcoded task activity users with real actor data. Added Google OAuth authentication.
 
 ---
 
