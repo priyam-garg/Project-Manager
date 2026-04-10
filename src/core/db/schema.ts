@@ -198,6 +198,41 @@ export const implementationPlans = pgTable('implementation_plans', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// ─── GitHub Integration ──────────────────────────────────────────────────────
+
+export const githubConnections = pgTable('github_connections', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .unique()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  githubUserLogin: text('github_user_login').notNull(),
+  accessToken: text('access_token').notNull(),
+  repoOwner: text('repo_owner'),
+  repoName: text('repo_name'),
+  repoFullName: text('repo_full_name'),
+  defaultBranch: text('default_branch'),
+  webhookId: integer('webhook_id'),
+  lastIndexedSha: text('last_indexed_sha'),
+  lastIndexedAt: timestamp('last_indexed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const githubIndexedFiles = pgTable('github_indexed_files', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  filepath: text('filepath').notNull(),
+  sha: text('sha').notNull(),
+  chunkCount: integer('chunk_count').notNull().default(0),
+  indexedAt: timestamp('indexed_at').defaultNow().notNull(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -318,6 +353,8 @@ export type ChatMessageMetric = typeof chatMessageMetrics.$inferSelect;
 export type ChatRateLimit = typeof chatRateLimits.$inferSelect;
 export type AgentGeneration = typeof agentGenerations.$inferSelect;
 export type ImplementationPlan = typeof implementationPlans.$inferSelect;
+export type GithubConnection = typeof githubConnections.$inferSelect;
+export type GithubIndexedFile = typeof githubIndexedFiles.$inferSelect;
 export type TaskStatus = (typeof taskStatusEnum.enumValues)[number];
 export type TaskPriority = (typeof taskPriorityEnum.enumValues)[number];
 export type EventType = (typeof eventTypeEnum.enumValues)[number];

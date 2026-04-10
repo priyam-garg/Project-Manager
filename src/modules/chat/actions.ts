@@ -141,6 +141,20 @@ export async function sendChatMessage(
       console.warn('Plan RAG retrieval failed, continuing without plan context:', err);
     }
 
+    // RAG: retrieve relevant code chunks from connected GitHub repo
+    try {
+      const { retrieveRelevantCodeChunks } = await import('@/modules/rag/code-retriever');
+      const codeChunks = await retrieveRelevantCodeChunks(message, { projectId }, 6);
+      if (codeChunks.length > 0) {
+        const codeContext = codeChunks
+          .map((c) => `--- ${c.filepath} ---\n${c.text}`)
+          .join('\n\n');
+        systemPrompt += `\n\n=== RELEVANT CODE FROM CONNECTED GITHUB REPO ===\n${codeContext}\n\nUse these code excerpts to give precise, file-specific answers. Cite filepaths when referring to code.`;
+      }
+    } catch (err) {
+      console.warn('Code RAG retrieval failed, continuing without code context:', err);
+    }
+
 
 
     let completion;

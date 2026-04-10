@@ -2,6 +2,7 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 
 const COLLECTION_NAME = 'tasks';
 const ROADMAP_COLLECTION_NAME = 'roadmap';
+const CODE_COLLECTION_NAME = 'code_chunks';
 const VECTOR_SIZE = Number(process.env.EMBEDDING_DIMENSIONS || 768);
 
 const globalForQdrant = globalThis as unknown as { qdrantClient?: QdrantClient };
@@ -70,5 +71,30 @@ export async function ensureRoadmapCollection(): Promise<void> {
   }
 }
 
-export { COLLECTION_NAME, ROADMAP_COLLECTION_NAME };
+export async function ensureCodeCollection(): Promise<void> {
+  const client = getQdrantClient();
+  const collections = await client.getCollections();
+  const exists = collections.collections.some((c) => c.name === CODE_COLLECTION_NAME);
+
+  if (!exists) {
+    await client.createCollection(CODE_COLLECTION_NAME, {
+      vectors: { size: VECTOR_SIZE, distance: 'Cosine' },
+    });
+
+    await client.createPayloadIndex(CODE_COLLECTION_NAME, {
+      field_name: 'project_id',
+      field_schema: 'keyword',
+    });
+    await client.createPayloadIndex(CODE_COLLECTION_NAME, {
+      field_name: 'filepath',
+      field_schema: 'keyword',
+    });
+    await client.createPayloadIndex(CODE_COLLECTION_NAME, {
+      field_name: 'language',
+      field_schema: 'keyword',
+    });
+  }
+}
+
+export { COLLECTION_NAME, ROADMAP_COLLECTION_NAME, CODE_COLLECTION_NAME };
 

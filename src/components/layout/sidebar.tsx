@@ -15,6 +15,8 @@ import {
   ChevronDown,
   Map,
   Home,
+  Code,
+  Settings,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -105,6 +107,16 @@ export function Sidebar() {
           name: 'Insights',
           href: `/projects/${currentProjectId}/insight`,
           icon: BarChart3,
+        },
+        {
+          name: 'Code',
+          href: `/projects/${currentProjectId}/code`,
+          icon: Code,
+        },
+        {
+          name: 'Settings',
+          href: `/projects/${currentProjectId}/settings`,
+          icon: Settings,
         },
       ]
     : [];

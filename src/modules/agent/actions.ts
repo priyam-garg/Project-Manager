@@ -50,6 +50,24 @@ export async function generateTasks(
       console.warn('RAG retrieval failed for agent, continuing without context:', err);
     }
 
+    // RAG: retrieve relevant code chunks from connected GitHub repo (if any)
+    let repoCodeContext = '';
+    try {
+      const { retrieveRelevantCodeChunks } = await import('@/modules/rag/code-retriever');
+      const codeChunks = await retrieveRelevantCodeChunks(
+        request.requirement,
+        { projectId: request.projectId },
+        6
+      );
+      if (codeChunks.length > 0) {
+        repoCodeContext = codeChunks
+          .map((c) => `--- ${c.filepath} ---\n${c.text}`)
+          .join('\n\n');
+      }
+    } catch (err) {
+      console.warn('Code RAG retrieval failed for agent, continuing without code context:', err);
+    }
+
     // Fetch implementation plan for architect context
     let planContext = '';
     try {
@@ -76,6 +94,7 @@ export async function generateTasks(
       techStack: request.techStack ?? project?.techStack ?? [],
       architecturalGuidelines: combinedGuidelines || undefined,
       existingTasks: existingTasksContext || undefined,
+      repoCodeContext: repoCodeContext || undefined,
     });
 
 

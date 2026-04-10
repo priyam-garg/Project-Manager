@@ -17,6 +17,7 @@ const ArchitectAnnotation = Annotation.Root({
   techStack: Annotation<string[]>,
   architecturalGuidelines: Annotation<string>,
   existingTasks: Annotation<string>,
+  repoCodeContext: Annotation<string>,
 
   // Internal
   plan: Annotation<ArchitectOutputType | null>,
@@ -147,6 +148,8 @@ function buildProjectContext(state: ArchitectState): string {
     parts.push(`Architectural Guidelines:\n${state.architecturalGuidelines}`);
   if (state.existingTasks)
     parts.push(`\nExisting Tasks in Project (DO NOT duplicate these — build on top of them or reference them as dependencies):\n${state.existingTasks}`);
+  if (state.repoCodeContext)
+    parts.push(`\nRelevant Existing Code from Connected Repository (use this to ground tasks in the actual codebase — reference real files, avoid recreating what already exists):\n${state.repoCodeContext}`);
   return parts.length > 0
     ? `\n\nProject Context:\n${parts.join('\n')}`
     : '';
@@ -240,6 +243,7 @@ export type ArchitectInput = {
   techStack?: string[];
   architecturalGuidelines?: string;
   existingTasks?: string;
+  repoCodeContext?: string;
 };
 
 export type ArchitectResult = {
@@ -259,6 +263,7 @@ export async function runArchitectGraph(
     techStack: input.techStack || [],
     architecturalGuidelines: input.architecturalGuidelines || '',
     existingTasks: input.existingTasks || '',
+    repoCodeContext: input.repoCodeContext || '',
     plan: null,
     critique: null,
     iteration: 0,

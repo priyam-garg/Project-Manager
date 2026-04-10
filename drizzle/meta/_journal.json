@@ -36,6 +36,13 @@
       "when": 1775757205158,
       "tag": "0004_outstanding_pixie",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775776840707,
+      "tag": "0005_daily_thunderbolts",
+      "breakpoints": true
     }
   ]
 }
