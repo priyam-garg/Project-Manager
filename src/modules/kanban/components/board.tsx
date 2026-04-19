@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DndContext,
   DragEndEvent,
@@ -45,7 +46,7 @@ export function Board({ projectId }: BoardProps) {
   
   const { tasks, isLoading } = useTasks(projectId);
   useRealtimeTasks(projectId);
-  const { optimisticMoveTask, revertOptimisticUpdate } = useTasksStore();
+  const { optimisticMoveTask, revertOptimisticUpdate, reorderTasks } = useTasksStore();
   const { sidebarOpen } = useUIStore();
 
   // Configure sensors for drag and drop
@@ -66,6 +67,7 @@ export function Board({ projectId }: BoardProps) {
     const task = tasks.find((t) => t.id === active.id);
     if (task) {
       setActiveTask(task);
+      document.body.classList.add('is-dragging');
     }
   };
 
@@ -73,6 +75,7 @@ export function Board({ projectId }: BoardProps) {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
+    document.body.classList.remove('is-dragging');
 
     if (!over) return;
 
@@ -93,7 +96,16 @@ export function Board({ projectId }: BoardProps) {
 
     // Find the task being moved
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || task.status === newStatus) return;
+    if (!task) return;
+
+    // Same-column reorder: just reorder in the store (client-side only)
+    if (task.status === newStatus) {
+      if (!STATUSES.includes(over.id as TaskStatus)) {
+        // Dropped on another task in the same column — reorder
+        reorderTasks(taskId, over.id as string, newStatus);
+      }
+      return;
+    }
 
     // Store original task for potential rollback
     const originalTask = { ...task };
@@ -148,7 +160,10 @@ export function Board({ projectId }: BoardProps) {
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => setActiveTask(null)}
+      onDragCancel={() => {
+        setActiveTask(null);
+        document.body.classList.remove('is-dragging');
+      }}
     >
       <section className={cn(
         'grid h-full gap-4 p-4 md:p-6',
@@ -176,9 +191,19 @@ export function Board({ projectId }: BoardProps) {
         ))}
       </section>
 
-      <DragOverlay>
-        {activeTask ? <Card task={activeTask} isOverlay /> : null}
-      </DragOverlay>
+      {typeof document !== 'undefined' && createPortal(
+        <DragOverlay
+          dropAnimation={{
+            duration: 200,
+            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+          }}
+          style={{ cursor: 'grabbing' }}
+          zIndex={9999}
+        >
+          {activeTask ? <Card task={activeTask} isOverlay /> : null}
+        </DragOverlay>,
+        document.body
+      )}
 
       <TaskModal />
 

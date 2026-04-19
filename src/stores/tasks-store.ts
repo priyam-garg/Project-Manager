@@ -18,6 +18,9 @@ type TasksState = {
   // Optimistic updates
   optimisticMoveTask: (taskId: string, newStatus: TaskStatus) => void;
   revertOptimisticUpdate: (taskId: string, originalTask: Task) => void;
+
+  // Reorder within column
+  reorderTasks: (activeId: string, overId: string, status: TaskStatus) => void;
 };
 
 export const useTasksStore = create<TasksState>((set) => ({
@@ -68,4 +71,30 @@ export const useTasksStore = create<TasksState>((set) => ({
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === taskId ? originalTask : t)),
     })),
+
+  reorderTasks: (activeId, overId, status) =>
+    set((state) => {
+      const allTasks = [...state.tasks];
+      // Get tasks in this column in their current array order
+      const columnTaskIds = allTasks
+        .map((t, i) => ({ task: t, index: i }))
+        .filter((item) => item.task.status === status);
+
+      const activeEntry = columnTaskIds.find((item) => item.task.id === activeId);
+      const overEntry = columnTaskIds.find((item) => item.task.id === overId);
+
+      if (!activeEntry || !overEntry) return state;
+
+      // Remove the active task from its current position
+      allTasks.splice(activeEntry.index, 1);
+
+      // Find the new position of the over task (index may have shifted after removal)
+      const newOverIndex = allTasks.findIndex((t) => t.id === overId);
+      if (newOverIndex === -1) return state;
+
+      // Insert the active task at the over task's position
+      allTasks.splice(newOverIndex, 0, activeEntry.task);
+
+      return { tasks: allTasks };
+    }),
 }));

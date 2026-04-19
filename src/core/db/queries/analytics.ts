@@ -114,6 +114,7 @@ export async function getPriorityBreakdown(
 
 /**
  * Get per-member performance (completed and in-progress task counts).
+ * Also counts unassigned tasks so the totals match the board.
  */
 export async function getMemberPerformance(projectId: string) {
   // Get all members of the project
@@ -126,7 +127,7 @@ export async function getMemberPerformance(projectId: string) {
     .innerJoin(users, eq(projectMembers.userId, users.id))
     .where(eq(projectMembers.projectId, projectId));
 
-  // Get tasks with assignees for this project
+  // Get tasks for this project
   const projectTasks = await db
     .select({
       assigneeId: tasks.assigneeId,
@@ -135,15 +136,38 @@ export async function getMemberPerformance(projectId: string) {
     .from(tasks)
     .where(eq(tasks.projectId, projectId));
 
-  return members.map((member) => {
+  // Count unassigned tasks
+  const unassignedTasks = projectTasks.filter((t) => !t.assigneeId);
+  const unassignedCompleted = unassignedTasks.filter((t) => t.status === 'done').length;
+  const unassignedInProgress = unassignedTasks.filter((t) => t.status === 'in_progress').length;
+
+  const result = members.map((member) => {
     const memberTasks = projectTasks.filter((t) => t.assigneeId === member.userId);
+    // If only one member, attribute unassigned tasks to them
+    const includeUnassigned = members.length === 1;
+    const completed = memberTasks.filter((t) => t.status === 'done').length
+      + (includeUnassigned ? unassignedCompleted : 0);
+    const inProgress = memberTasks.filter((t) => t.status === 'in_progress').length
+      + (includeUnassigned ? unassignedInProgress : 0);
     return {
       userId: member.userId,
       userName: member.userName,
-      tasksCompleted: memberTasks.filter((t) => t.status === 'done').length,
-      tasksInProgress: memberTasks.filter((t) => t.status === 'in_progress').length,
+      tasksCompleted: completed,
+      tasksInProgress: inProgress,
     };
   });
+
+  // If multiple members, add an "Unassigned" row so the numbers add up
+  if (members.length > 1 && unassignedTasks.length > 0) {
+    result.push({
+      userId: 'unassigned',
+      userName: 'Unassigned',
+      tasksCompleted: unassignedCompleted,
+      tasksInProgress: unassignedInProgress,
+    });
+  }
+
+  return result;
 }
 
 /**

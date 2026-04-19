@@ -12,7 +12,7 @@ import {
   getActivePlanContent as dbGetActivePlanContent,
 } from '@/core/db/queries';
 import { getProjectById } from '@/core/db/queries';
-import { generateImplementationPlan, regeneratePhase } from './plan-generator';
+import { generateImplementationPlan, regeneratePhase, refinePlanWithPrompt } from './plan-generator';
 import { parsePlanToSections } from './plan-parser';
 import { upsertPlanVectors, deleteAllPlanVectors, upsertSingleSectionVector } from '@/modules/rag/plan-sync';
 
@@ -56,6 +56,7 @@ export async function generatePlanWithAI(
     description?: string;
     techStack?: string[];
     guidelines?: string;
+    userPrompt?: string;
   }
 ): Promise<ApiResponse<ImplementationPlan>> {
   try {
@@ -66,6 +67,7 @@ export async function generatePlanWithAI(
       description: details.description,
       techStack: details.techStack,
       guidelines: details.guidelines,
+      userPrompt: details.userPrompt,
     });
 
     const plan = await dbCreatePlan({
@@ -87,6 +89,50 @@ export async function generatePlanWithAI(
   } catch (error) {
     console.error('Failed to generate plan:', error);
     const message = error instanceof Error ? error.message : 'Failed to generate plan';
+    return { success: false, error: message };
+  }
+}
+
+export async function refinePlanWithAI(
+  projectId: string,
+  userPrompt: string
+): Promise<ApiResponse<ImplementationPlan>> {
+  try {
+    const user = await getAuthUser();
+    const project = await getProjectById(projectId);
+    const currentPlan = await dbGetActivePlan(projectId);
+
+    if (!currentPlan) {
+      return { success: false, error: 'No active plan to refine' };
+    }
+
+    const result = await refinePlanWithPrompt({
+      projectName: project?.name || 'Unknown',
+      existingPlan: currentPlan.content,
+      userPrompt,
+      description: project?.description ?? undefined,
+    });
+
+    const plan = await dbCreatePlan({
+      projectId,
+      content: result.content,
+      sections: result.sections,
+      source: 'ai_refined',
+      userId: user.id,
+    });
+
+    // Background: vectorize plan sections
+    try {
+      await deleteAllPlanVectors(projectId);
+      await upsertPlanVectors(plan);
+    } catch (err) {
+      console.warn('Failed to vectorize refined plan (non-blocking):', err);
+    }
+
+    return { success: true, data: plan };
+  } catch (error) {
+    console.error('Failed to refine plan:', error);
+    const message = error instanceof Error ? error.message : 'Failed to refine plan';
     return { success: false, error: message };
   }
 }
@@ -186,7 +232,8 @@ export async function updatePlanSectionAction(
 
 export async function regeneratePhaseWithAI(
   projectId: string,
-  phaseNumber: number
+  phaseNumber: number,
+  userPrompt?: string
 ): Promise<ApiResponse<ImplementationPlan>> {
   try {
     const user = await getAuthUser();
@@ -202,6 +249,7 @@ export async function regeneratePhaseWithAI(
       existingPlan: currentPlan.content,
       phaseNumber,
       description: project?.description ?? undefined,
+      userPrompt,
     });
 
     const plan = await dbCreatePlan({

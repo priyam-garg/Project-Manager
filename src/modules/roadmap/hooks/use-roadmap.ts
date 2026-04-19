@@ -10,6 +10,7 @@ import {
   regeneratePhaseWithAI,
   generatePlanWithAI,
   uploadPlan,
+  refinePlanWithAI,
 } from '@/modules/roadmap/actions';
 
 export function useRoadmap(projectId: string) {
@@ -19,6 +20,7 @@ export function useRoadmap(projectId: string) {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<ImplementationPlan[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
   const [regeneratingPhase, setRegeneratingPhase] = useState<number | null>(null);
 
   const loadPlan = useCallback(async () => {
@@ -89,11 +91,11 @@ export function useRoadmap(projectId: string) {
   );
 
   const regeneratePhase = useCallback(
-    async (phaseNumber: number) => {
+    async (phaseNumber: number, userPrompt?: string) => {
       setRegeneratingPhase(phaseNumber);
       setError(null);
       try {
-        const result = await regeneratePhaseWithAI(projectId, phaseNumber);
+        const result = await regeneratePhaseWithAI(projectId, phaseNumber, userPrompt);
         if (result.success && result.data) {
           setPlan(result.data);
           setSections((result.data.sections as PlanSection[]) ?? []);
@@ -114,6 +116,7 @@ export function useRoadmap(projectId: string) {
       name: string;
       description?: string;
       techStack?: string[];
+      userPrompt?: string;
     }) => {
       setIsGenerating(true);
       setError(null);
@@ -161,6 +164,30 @@ export function useRoadmap(projectId: string) {
     [projectId]
   );
 
+  const refinePlan = useCallback(
+    async (userPrompt: string) => {
+      setIsRefining(true);
+      setError(null);
+      try {
+        const result = await refinePlanWithAI(projectId, userPrompt);
+        if (result.success && result.data) {
+          setPlan(result.data);
+          setSections((result.data.sections as PlanSection[]) ?? []);
+          return result.data;
+        } else {
+          setError(result.error || 'Failed to refine plan');
+          return null;
+        }
+      } catch {
+        setError('Failed to refine plan');
+        return null;
+      } finally {
+        setIsRefining(false);
+      }
+    },
+    [projectId]
+  );
+
   return {
     plan,
     sections,
@@ -168,6 +195,7 @@ export function useRoadmap(projectId: string) {
     error,
     history,
     isGenerating,
+    isRefining,
     regeneratingPhase,
     loadPlan,
     loadHistory,
@@ -176,5 +204,6 @@ export function useRoadmap(projectId: string) {
     regeneratePhase,
     generateNew,
     uploadNew,
+    refinePlan,
   };
 }

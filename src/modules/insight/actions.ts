@@ -8,12 +8,50 @@ import {
   getPriorityBreakdown,
   getMemberPerformance,
   getBurndownData,
+  getActivePlanContent,
 } from '@/core/db/queries';
 import { generateChatCompletion } from '@/core/ai/chat';
 import {
   formatAnalyticsPrompt,
+  formatSuggestionsPrompt,
   INSIGHT_NARRATIVE_SYSTEM_PROMPT,
+  SUGGEST_CHANGES_SYSTEM_PROMPT,
 } from './lib/format-analytics-prompt';
+import { getConnectionStatus, getFileTree } from '@/modules/github/actions';
+
+/**
+ * Fetch the optional roadmap content and code file tree for a project.
+ * Returns nulls gracefully if either is unavailable.
+ */
+async function fetchContextData(projectId: string) {
+  const [roadmapContent, githubStatus] = await Promise.all([
+    getActivePlanContent(projectId).catch(() => null),
+    getConnectionStatus(projectId).catch(() => null),
+  ]);
+
+  let codeStructure: string | null = null;
+
+  if (githubStatus?.success && githubStatus.data?.connected && githubStatus.data?.hasRepo) {
+    try {
+      const treeResult = await getFileTree(projectId);
+      if (treeResult.success && treeResult.data) {
+        // Build a compact file tree summary (limit to 100 entries to keep tokens manageable)
+        const entries = treeResult.data.slice(0, 100);
+        const treeLines = entries.map(
+          (n) => `${n.type === 'tree' ? '📁' : '📄'} ${n.path}`
+        );
+        if (treeResult.data.length > 100) {
+          treeLines.push(`... and ${treeResult.data.length - 100} more files`);
+        }
+        codeStructure = treeLines.join('\n');
+      }
+    } catch {
+      // Silently ignore — code data is optional
+    }
+  }
+
+  return { roadmapContent, codeStructure };
+}
 
 export async function getAnalytics(
   projectId: string,
@@ -57,12 +95,21 @@ export async function generateNarrative(
   try {
     await getAuthUser();
 
-    const result = await getAnalytics(projectId, dateRange);
-    if (!result.success || !result.data) {
+    const [analyticsResult, contextData] = await Promise.all([
+      getAnalytics(projectId, dateRange),
+      fetchContextData(projectId),
+    ]);
+
+    if (!analyticsResult.success || !analyticsResult.data) {
       return { success: false, error: 'Unable to load analytics data' };
     }
 
-    const message = formatAnalyticsPrompt(result.data, dateRange);
+    const message = formatAnalyticsPrompt(
+      analyticsResult.data,
+      dateRange,
+      contextData.roadmapContent,
+      contextData.codeStructure
+    );
 
     const completion = await generateChatCompletion({
       message,
@@ -77,6 +124,46 @@ export async function generateNarrative(
       error instanceof Error && error.message.toLowerCase().includes('timeout')
         ? 'The AI service timed out. Please try again.'
         : 'Failed to generate narrative';
+    return { success: false, error: message };
+  }
+}
+
+export async function generateSuggestions(
+  projectId: string,
+  dateRange: DateRangeFilter
+): Promise<ApiResponse<string>> {
+  try {
+    await getAuthUser();
+
+    const [analyticsResult, contextData] = await Promise.all([
+      getAnalytics(projectId, dateRange),
+      fetchContextData(projectId),
+    ]);
+
+    if (!analyticsResult.success || !analyticsResult.data) {
+      return { success: false, error: 'Unable to load analytics data' };
+    }
+
+    const message = formatSuggestionsPrompt(
+      analyticsResult.data,
+      dateRange,
+      contextData.roadmapContent,
+      contextData.codeStructure
+    );
+
+    const completion = await generateChatCompletion({
+      message,
+      history: [],
+      systemPrompt: SUGGEST_CHANGES_SYSTEM_PROMPT,
+    });
+
+    return { success: true, data: completion.content };
+  } catch (error) {
+    console.error('Failed to generate suggestions:', error);
+    const message =
+      error instanceof Error && error.message.toLowerCase().includes('timeout')
+        ? 'The AI service timed out. Please try again.'
+        : 'Failed to generate suggestions';
     return { success: false, error: message };
   }
 }

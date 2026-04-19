@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 type Props = {
   sections: PlanSection[];
   regeneratingPhase: number | null;
-  onRegeneratePhase: (phaseNumber: number) => void;
+  onRegeneratePhase: (phaseNumber: number, userPrompt?: string) => void;
   onUpdateSection: (sectionId: string, content: string, items: string[]) => Promise<void>;
 };
 
@@ -59,7 +59,7 @@ export function PlanViewer({
           phaseNumber={phaseNumber}
           sections={group.sections}
           isRegenerating={regeneratingPhase === phaseNumber}
-          onRegeneratePhase={() => onRegeneratePhase(phaseNumber)}
+          onRegeneratePhase={(userPrompt?: string) => onRegeneratePhase(phaseNumber, userPrompt)}
           onUpdateSection={onUpdateSection}
         />
       ))}

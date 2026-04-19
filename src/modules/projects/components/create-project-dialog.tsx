@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createProject } from '@/modules/projects/actions';
 import { generatePlanWithAI, uploadPlan } from '@/modules/roadmap/actions';
-import { Bot, FileText, Loader2, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { Bot, FileText, Loader2, ArrowLeft, ArrowRight, Sparkles, SkipForward } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 type Props = {
@@ -187,7 +187,7 @@ Describe your project goals here.
           <DialogDescription>
             {step === 1
               ? 'Set up your project details.'
-              : 'Every project needs a roadmap. Generate one with AI or write your own.'}
+              : 'Optionally set up a roadmap now, or skip and create one later.'}
           </DialogDescription>
           {/* Step indicator */}
           <div className="flex items-center gap-2 pt-2">
@@ -284,6 +284,19 @@ Describe your project goals here.
                     Write Manually
                   </Button>
                 </div>
+                <Button
+                  variant="ghost"
+                  className="w-full max-w-sm gap-2 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    handleClose();
+                    if (createdProjectId) {
+                      router.push(`/projects/${createdProjectId}/board`);
+                    }
+                  }}
+                >
+                  <SkipForward className="h-4 w-4" />
+                  Skip for now — I'll do this later
+                </Button>
               </div>
             )}
 

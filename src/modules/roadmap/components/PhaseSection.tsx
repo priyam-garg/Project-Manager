@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { PlanSection } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Pencil, RefreshCw, X, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, RefreshCw, X, Check, Send, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
   phaseNumber: number;
   sections: PlanSection[];
   isRegenerating: boolean;
-  onRegeneratePhase: () => void;
+  onRegeneratePhase: (userPrompt?: string) => void;
   onUpdateSection: (sectionId: string, content: string, items: string[]) => Promise<void>;
 };
 
@@ -27,6 +27,8 @@ export function PhaseSection({
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [promptText, setPromptText] = useState('');
 
   function startEdit(section: PlanSection) {
     setEditingSectionId(section.id);
@@ -87,12 +89,61 @@ export function PhaseSection({
           size="sm"
           className="gap-1.5 text-xs"
           disabled={isRegenerating}
-          onClick={onRegeneratePhase}
+          onClick={() => setShowPrompt(!showPrompt)}
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isRegenerating && 'animate-spin')} />
           {isRegenerating ? 'Regenerating...' : 'Regenerate'}
         </Button>
       </div>
+
+      {/* Regenerate Prompt — inline */}
+      {showPrompt && !isRegenerating && (
+        <div className="mx-4 mb-3 rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-semibold">Regenerate Phase {phaseNumber}</span>
+            </div>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setShowPrompt(false); setPromptText(''); }}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          <textarea
+            value={promptText}
+            onChange={(e) => setPromptText(e.target.value)}
+            className="w-full min-h-[50px] rounded-md border border-white/25 bg-background/70 px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/10"
+            placeholder="e.g. Add more detail on API integration, focus on testing..."
+            autoFocus
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => {
+                onRegeneratePhase();
+                setShowPrompt(false);
+                setPromptText('');
+              }}
+            >
+              Regenerate without prompt
+            </Button>
+            <Button
+              size="sm"
+              className="text-xs gap-1.5"
+              disabled={!promptText.trim()}
+              onClick={() => {
+                onRegeneratePhase(promptText.trim());
+                setShowPrompt(false);
+                setPromptText('');
+              }}
+            >
+              <Send className="h-3 w-3" />
+              Regenerate with Prompt
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Phase Content */}
       {!isCollapsed && (

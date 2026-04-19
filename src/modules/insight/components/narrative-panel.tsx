@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Sparkles, RefreshCw } from 'lucide-react';
+import { Sparkles, RefreshCw, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { generateNarrative } from '../actions';
+import { generateNarrative, generateSuggestions } from '../actions';
 import type { DateRangeFilter } from '@/types';
 
 interface NarrativePanelProps {
@@ -20,10 +20,16 @@ export function NarrativePanel({ projectId, dateRange, hasData }: NarrativePanel
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [suggestions, setSuggestions] = useState<string | null>(null);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+
   // Reset when date range changes
   useEffect(() => {
     setNarrative(null);
     setError(null);
+    setSuggestions(null);
+    setSuggestionsError(null);
   }, [dateRange]);
 
   async function handleGenerate() {
@@ -41,72 +47,157 @@ export function NarrativePanel({ projectId, dateRange, hasData }: NarrativePanel
     setIsGenerating(false);
   }
 
+  async function handleSuggestChanges() {
+    setIsGeneratingSuggestions(true);
+    setSuggestionsError(null);
+
+    const result = await generateSuggestions(projectId, dateRange);
+
+    if (result.success && result.data) {
+      setSuggestions(result.data);
+    } else {
+      setSuggestionsError(result.error || 'Failed to generate suggestions');
+    }
+
+    setIsGeneratingSuggestions(false);
+  }
+
   return (
-    <Card className="space-y-4 border-primary/20 bg-primary/5 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">AI Insight Summary</h2>
+    <div className="space-y-4">
+      {/* AI Insight Summary */}
+      <Card className="space-y-4 border-primary/20 bg-primary/5 p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">AI Insight Summary</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={narrative ? 'outline' : 'default'}
+              onClick={handleGenerate}
+              disabled={!hasData || isGenerating}
+              className="gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : narrative ? (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Regenerate
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Generate
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-        <Button
-          size="sm"
-          variant={narrative ? 'outline' : 'default'}
-          onClick={handleGenerate}
-          disabled={!hasData || isGenerating}
-          className="gap-2"
-        >
-          {isGenerating ? (
-            <>
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : narrative ? (
-            <>
-              <RefreshCw className="h-4 w-4" />
-              Regenerate
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Generate
-            </>
-          )}
-        </Button>
-      </div>
 
-      {/* Body */}
-      {isGenerating && (
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-[90%]" />
-          <Skeleton className="h-4 w-[95%]" />
-          <Skeleton className="h-4 w-[80%]" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-[85%]" />
-        </div>
-      )}
+        {/* Body */}
+        {isGenerating && (
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-[90%]" />
+            <Skeleton className="h-4 w-[95%]" />
+            <Skeleton className="h-4 w-[80%]" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-[85%]" />
+          </div>
+        )}
 
-      {error && !isGenerating && (
-        <div className="space-y-2">
-          <p className="text-sm text-destructive">{error}</p>
-          <Button size="sm" variant="outline" onClick={handleGenerate}>
-            Retry
+        {error && !isGenerating && (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{error}</p>
+            <Button size="sm" variant="outline" onClick={handleGenerate}>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {narrative && !isGenerating && (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{narrative}</ReactMarkdown>
+          </div>
+        )}
+
+        {!narrative && !isGenerating && !error && (
+          <p className="text-sm text-muted-foreground">
+            Click Generate to get an AI-powered analysis of your project metrics, roadmap, and codebase.
+          </p>
+        )}
+      </Card>
+
+      {/* Suggest Changes */}
+      <Card className="space-y-4 border-amber-500/25 bg-amber-500/5 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Lightbulb className="h-5 w-5 text-amber-500" />
+            <h2 className="text-lg font-semibold">AI Suggested Changes</h2>
+          </div>
+          <Button
+            size="sm"
+            variant={suggestions ? 'outline' : 'default'}
+            onClick={handleSuggestChanges}
+            disabled={!hasData || isGeneratingSuggestions}
+            className="gap-2"
+          >
+            {isGeneratingSuggestions ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : suggestions ? (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                Regenerate
+              </>
+            ) : (
+              <>
+                <Lightbulb className="h-4 w-4" />
+                Suggest Changes
+              </>
+            )}
           </Button>
         </div>
-      )}
 
-      {narrative && !isGenerating && (
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown>{narrative}</ReactMarkdown>
-        </div>
-      )}
+        {isGeneratingSuggestions && (
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-[88%]" />
+            <Skeleton className="h-4 w-[92%]" />
+            <Skeleton className="h-4 w-[78%]" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        )}
 
-      {!narrative && !isGenerating && !error && (
-        <p className="text-sm text-muted-foreground">
-          Click Generate to get an AI-powered analysis of your project metrics.
-        </p>
-      )}
-    </Card>
+        {suggestionsError && !isGeneratingSuggestions && (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{suggestionsError}</p>
+            <Button size="sm" variant="outline" onClick={handleSuggestChanges}>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {suggestions && !isGeneratingSuggestions && (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{suggestions}</ReactMarkdown>
+          </div>
+        )}
+
+        {!suggestions && !isGeneratingSuggestions && !suggestionsError && (
+          <p className="text-sm text-muted-foreground">
+            Get AI-powered recommendations based on your project metrics, roadmap alignment, and code structure.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

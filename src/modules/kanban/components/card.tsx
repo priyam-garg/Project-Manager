@@ -19,17 +19,14 @@ export function Card({ task, isOverlay = false }: CardProps) {
   const openTaskModal = useUIStore((state) => state.openTaskModal);
 
   const style = isOverlay
-    ? undefined
+    ? { cursor: 'grabbing' as const }
     : {
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1,
       };
 
   const handleClick = (e: React.MouseEvent) => {
-    // If listeners are on the card, dnd-kit might take over the events.
-    // However, with activationConstraint, click should still work.
-    // We prevent propagation just in case something else is listening.
+    if (isDragging) return;
     e.stopPropagation();
     openTaskModal(task.id);
   };
@@ -60,9 +57,12 @@ export function Card({ task, isOverlay = false }: CardProps) {
       {...(isOverlay ? {} : listeners)}
       onClick={handleClick}
       className={cn(
-        'cursor-pointer rounded-xl border border-white/25 bg-background/70 p-3 shadow-[0_14px_25px_-24px_rgba(15,23,42,0.7)] backdrop-blur-sm transition-all duration-200 dark:border-white/10',
-        'hover:-translate-y-0.5 hover:border-primary/35 hover:bg-background/85',
-        isDragging && 'cursor-grabbing'
+        'rounded-xl border p-3 backdrop-blur-sm transition-all duration-200',
+        isOverlay
+          ? 'cursor-grabbing border-primary/40 bg-background/90 shadow-2xl scale-[1.02] rotate-[1.5deg] ring-2 ring-primary/20'
+          : isDragging
+            ? 'opacity-30 border-dashed border-primary/30 bg-background/30 shadow-none'
+            : 'cursor-grab border-white/25 bg-background/70 shadow-[0_14px_25px_-24px_rgba(15,23,42,0.7)] dark:border-white/10 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-background/85'
       )}
     >
       <div className="space-y-2">

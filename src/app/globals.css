@@ -163,6 +163,12 @@
   }
 }
 
+  /* Force grabbing cursor on body during drag-and-drop */
+  .is-dragging,
+  .is-dragging * {
+    cursor: grabbing !important;
+  }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

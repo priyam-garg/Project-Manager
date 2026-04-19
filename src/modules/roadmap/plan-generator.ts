@@ -102,6 +102,30 @@ Rules:
 7. Be practical and specific to the project described — avoid generic filler.
 8. Do NOT wrap the output in code blocks. Output the markdown directly.`;
 
+const PLAN_REFINE_PROMPT = `You are a Senior Technical Project Manager revising an existing implementation plan based on user feedback.
+
+You will receive the full existing plan and a user instruction describing what to change.
+
+Rewrite the ENTIRE plan incorporating the user's requested changes. Keep the same markdown structure:
+
+# Overview
+...
+
+## Phase N: [Phase Name]
+### Goals
+- ...
+### Tasks
+- ...
+### Deliverables
+- ...
+
+Rules:
+1. Preserve parts the user did NOT ask to change.
+2. Apply the user's changes accurately and thoroughly.
+3. Keep 3-6 phases with logical progression.
+4. Be practical and specific.
+5. Do NOT wrap the output in code blocks. Output the markdown directly.`;
+
 const PHASE_REGENERATOR_PROMPT = `You are a Senior Technical Project Manager revising one phase of an implementation plan.
 
 You will receive the full existing plan for context, and a specific phase number to regenerate.
@@ -129,6 +153,7 @@ export type PlanGenerationInput = {
   description?: string;
   techStack?: string[];
   guidelines?: string;
+  userPrompt?: string;
 };
 
 export type PlanGenerationResult = {
@@ -146,10 +171,36 @@ export async function generateImplementationPlan(
   if (input.description) parts.push(`Description: ${input.description}`);
   if (input.techStack?.length) parts.push(`Tech Stack: ${input.techStack.join(', ')}`);
   if (input.guidelines) parts.push(`Architectural Guidelines:\n${input.guidelines}`);
+  if (input.userPrompt) parts.push(`Additional Instructions from User:\n${input.userPrompt}`);
 
   const userMessage = `Create an implementation plan/roadmap for the following project:\n\n${parts.join('\n')}`;
 
   const content = await callLLM(PLAN_GENERATOR_PROMPT, userMessage);
+  const sections = parsePlanToSections(content);
+
+  return { content, sections };
+}
+
+/**
+ * Refine an existing plan based on a user instruction.
+ */
+export async function refinePlanWithPrompt(input: {
+  projectName: string;
+  existingPlan: string;
+  userPrompt: string;
+  description?: string;
+}): Promise<PlanGenerationResult> {
+  const userMessage = `Project: ${input.projectName}${input.description ? `\nDescription: ${input.description}` : ''}
+
+Existing implementation plan:
+${input.existingPlan}
+
+User's requested changes:
+${input.userPrompt}
+
+Please rewrite the full plan incorporating these changes.`;
+
+  const content = await callLLM(PLAN_REFINE_PROMPT, userMessage);
   const sections = parsePlanToSections(content);
 
   return { content, sections };
@@ -163,13 +214,14 @@ export async function regeneratePhase(input: {
   existingPlan: string;
   phaseNumber: number;
   description?: string;
+  userPrompt?: string;
 }): Promise<PlanGenerationResult> {
   const userMessage = `Project: ${input.projectName}${input.description ? `\nDescription: ${input.description}` : ''}
 
 Existing implementation plan:
 ${input.existingPlan}
 
-Please regenerate Phase ${input.phaseNumber}. Output only the phase markdown.`;
+Please regenerate Phase ${input.phaseNumber}.${input.userPrompt ? `\n\nUser instructions for this phase:\n${input.userPrompt}` : ''} Output only the phase markdown.`;
 
   const phaseMarkdown = await callLLM(PHASE_REGENERATOR_PROMPT, userMessage);
 
