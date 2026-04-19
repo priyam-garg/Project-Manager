@@ -5,7 +5,7 @@ import { after } from 'next/server';
 import { upsertTaskVector, deleteTaskVector } from '@/modules/rag/sync';
 import type { Task, TaskStatus } from '@/core/db/schema';
 import type { CreateTaskInput, UpdateTaskInput, ApiResponse } from '@/types';
-import { getAuthUser } from '@/core/auth';
+import { getAuthUser, requireRole } from '@/core/auth';
 import {
   getTasksByProject,
   getTaskEventsByTaskId,
@@ -18,6 +18,8 @@ import type { TaskEventWithUser } from '@/core/db/queries/tasks';
 
 export async function getTasks(projectId: string): Promise<ApiResponse<Task[]>> {
   try {
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
     const tasks = await getTasksByProject(projectId);
     return { success: true, data: tasks };
   } catch (error) {
@@ -41,6 +43,7 @@ export async function getTaskEvents(
 export async function createTask(input: CreateTaskInput): Promise<ApiResponse<Task>> {
   try {
     const user = await getAuthUser();
+    await requireRole(user.id, input.projectId, 'member');
     const task = await dbCreateTask(
       {
         projectId: input.projectId,
@@ -64,6 +67,10 @@ export async function createTask(input: CreateTaskInput): Promise<ApiResponse<Ta
 export async function updateTask(input: UpdateTaskInput): Promise<ApiResponse<Task>> {
   try {
     const user = await getAuthUser();
+    if (!input.projectId) {
+      return { success: false, error: 'projectId is required' };
+    }
+    await requireRole(user.id, input.projectId, 'member');
     const task = await dbUpdateTask(
       input.id,
       {
@@ -95,6 +102,7 @@ export async function deleteTask(
 ): Promise<ApiResponse<void>> {
   try {
     const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'admin');
     await dbDeleteTask(taskId, user.id);
     revalidatePath(`/projects/${projectId}/board`);
     after(() => deleteTaskVector(taskId).catch((e) => console.error('Vector delete failed:', e)));
@@ -112,6 +120,7 @@ export async function moveTask(
 ): Promise<ApiResponse<Task>> {
   try {
     const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
     const task = await dbMoveTask(taskId, newStatus, user.id);
 
     if (!task) {

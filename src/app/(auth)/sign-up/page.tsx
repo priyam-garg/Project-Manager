@@ -12,6 +12,12 @@ type Props = {
 export default async function SignUpPage({ searchParams }: Props) {
   const resolvedParams = await searchParams;
   const error = resolvedParams.error as string | undefined;
+  const nextRaw = resolvedParams.next;
+  const next = typeof nextRaw === 'string' && nextRaw.startsWith('/') && !nextRaw.startsWith('//')
+    ? nextRaw
+    : '';
+  const prefillEmail = typeof resolvedParams.email === 'string' ? resolvedParams.email : '';
+  const signInHref = next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in';
 
   return (
     <AnimatedPage className="min-h-screen">
@@ -36,6 +42,7 @@ export default async function SignUpPage({ searchParams }: Props) {
           )}
 
           <form className="space-y-6">
+            {next && <input type="hidden" name="next" value={next} />}
             <div className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
@@ -59,6 +66,7 @@ export default async function SignUpPage({ searchParams }: Props) {
                   name="email"
                   type="email"
                   placeholder="you@example.com"
+                  defaultValue={prefillEmail}
                   required
                   className="h-11"
                 />
@@ -92,6 +100,7 @@ export default async function SignUpPage({ searchParams }: Props) {
           </div>
 
           <form>
+            {next && <input type="hidden" name="next" value={next} />}
             <Button
               type="submit"
               variant="outline"
@@ -107,7 +116,7 @@ export default async function SignUpPage({ searchParams }: Props) {
 
           <div className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/sign-in" className="font-semibold text-primary transition-colors hover:text-primary/80">
+            <Link href={signInHref} className="font-semibold text-primary transition-colors hover:text-primary/80">
               Log in
             </Link>
           </div>

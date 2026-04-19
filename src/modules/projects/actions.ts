@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import type { Project } from '@/core/db/schema';
 import type { ApiResponse } from '@/types';
-import { getAuthUser } from '@/core/auth';
+import { getAuthUser, requireRole } from '@/core/auth';
 import {
   getUserProjects,
   getProjectById,
@@ -25,6 +25,8 @@ export async function getProjects(): Promise<ApiResponse<Project[]>> {
 
 export async function getProject(projectId: string): Promise<ApiResponse<Project>> {
   try {
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
     const project = await getProjectById(projectId);
     if (!project) {
       return { success: false, error: 'Project not found' };
@@ -56,7 +58,8 @@ export async function updateProjectAction(
   data: { name?: string; description?: string }
 ): Promise<ApiResponse<Project>> {
   try {
-    await getAuthUser();
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'admin');
     const project = await dbUpdateProject(projectId, data);
     if (!project) {
       return { success: false, error: 'Project not found' };
@@ -71,7 +74,8 @@ export async function updateProjectAction(
 
 export async function deleteProjectAction(projectId: string): Promise<ApiResponse<void>> {
   try {
-    await getAuthUser();
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'owner');
     await dbDeleteProject(projectId);
     revalidatePath('/dashboard');
     return { success: true };

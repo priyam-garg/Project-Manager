@@ -5,3 +5,4 @@ export * from './chat';
 export * from './analytics';
 export * from './agent';
 export * from './roadmap';
+export * from './invites';

@@ -33,6 +33,13 @@ export const memberRoleEnum = pgEnum('member_role', ['owner', 'admin', 'member']
 
 export const chatRoleEnum = pgEnum('chat_role', ['user', 'assistant']);
 
+export const invitationStatusEnum = pgEnum('invitation_status', [
+  'pending',
+  'accepted',
+  'revoked',
+  'expired',
+]);
+
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export const users = pgTable('users', {
@@ -70,6 +77,25 @@ export const projectMembers = pgTable('project_members', {
     .references(() => users.id, { onDelete: 'cascade' }),
   role: memberRoleEnum('role').notNull().default('member'),
   joinedAt: timestamp('joined_at').defaultNow().notNull(),
+});
+
+// ─── Project Invitations ──────────────────────────────────────────────────────
+
+export const projectInvitations = pgTable('project_invitations', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  invitedEmail: text('invited_email').notNull(),
+  invitedByUserId: text('invited_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  role: memberRoleEnum('role').notNull().default('member'),
+  token: text('token').notNull().unique(),
+  status: invitationStatusEnum('status').notNull().default('pending'),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  acceptedAt: timestamp('accepted_at'),
 });
 
 // ─── Tasks ────────────────────────────────────────────────────────────────────
@@ -346,6 +372,9 @@ export const implementationPlansRelations = relations(implementationPlans, ({ on
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type ProjectMember = typeof projectMembers.$inferSelect;
+export type ProjectInvitation = typeof projectInvitations.$inferSelect;
+export type MemberRole = (typeof memberRoleEnum.enumValues)[number];
+export type InvitationStatus = (typeof invitationStatusEnum.enumValues)[number];
 export type Task = typeof tasks.$inferSelect;
 export type TaskEvent = typeof taskEvents.$inferSelect;
 export type ChatMessageRecord = typeof chatMessages.$inferSelect;
@@ -358,5 +387,4 @@ export type GithubIndexedFile = typeof githubIndexedFiles.$inferSelect;
 export type TaskStatus = (typeof taskStatusEnum.enumValues)[number];
 export type TaskPriority = (typeof taskPriorityEnum.enumValues)[number];
 export type EventType = (typeof eventTypeEnum.enumValues)[number];
-export type MemberRole = (typeof memberRoleEnum.enumValues)[number];
 export type ChatRole = (typeof chatRoleEnum.enumValues)[number];

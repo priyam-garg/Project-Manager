@@ -1,6 +1,10 @@
 # 🚀 Project Nexus: Implementation Status Report
 
-## 0. 📝 Latest Update (10/04/2026)
+## 0. 📝 Latest Update (19/04/2026)
+
+* Implemented **Step 5: Team Collaboration** — project invitations, role-based permissions, and a public `/invite/[token]` accept page. See bottom of this doc for full detail.
+
+## Previous Update (10/04/2026)
 
 * Implemented **Project Roadmap / Implementation Plan** feature.
   * Added `implementation_plans` table to store versioned roadmaps (up to 10 versions) in Markdown structure with JSONB phase tracking (`src/core/db/schema.ts`).
@@ -488,17 +492,36 @@ Project Nexus has achieved:
 * Create LLM prompt template that acts as a "Product Manager" interpreting project metrics
 * Add narrative generation to the Insight dashboard alongside existing charts
 
-#### Step 4: Real-Time Sync via SSE (Roadmap Section 7)
+#### ~~Step 4: Real-Time Sync via Supabase Realtime (Roadmap Section 7)~~ ✅ COMPLETED (19/04/2026)
 > **Goal:** Enable live updates across browser tabs/users when tasks change
 
-* Create Postgres LISTEN/NOTIFY trigger on `tasks` table
-* Build SSE endpoint (`src/app/api/sse/route.ts`)
-* Add client-side `useEffect` hook to subscribe to SSE stream and call `router.refresh()`
-* Alternatively: evaluate using Supabase Realtime (simpler with existing Supabase setup)
+* ✅ Chose Supabase Realtime over Postgres `LISTEN/NOTIFY` + SSE — the DB client runs in PgBouncer transaction-pool mode (`prepare: false`), which is incompatible with `LISTEN`, and Supabase is already in the stack.
+* ✅ Migration `0006_realtime_tasks.sql` — `ALTER TABLE tasks REPLICA IDENTITY FULL` + `ALTER PUBLICATION supabase_realtime ADD TABLE tasks` (so DELETE events carry the old row and the `project_id=eq.X` filter works).
+* ✅ Row mapper (`src/lib/realtime/map-task-row.ts`) — converts snake_case Postgres row → camelCase `Task` shape used by the app.
+* ✅ Client hook (`src/lib/hooks/use-realtime-tasks.ts`) — subscribes to `postgres_changes` on `tasks` filtered by `project_id`, dispatches `addTask` / `updateTask` / `deleteTask` on the Zustand store. Cleans up the channel on unmount.
+* ✅ Wired into `Board` (`src/modules/kanban/components/board.tsx`) — a single `useRealtimeTasks(projectId)` call beside the existing initial `useTasks` fetch.
 
-#### Step 5: Team Collaboration
-> **Goal:** Allow inviting other users to projects
+**Run order after pulling:** `npm run db:migrate` (applies 0006) — no env changes needed; client reuses `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-* Build invite flow UI (email-based invite)
-* Add invite acceptance/rejection logic
-* Role-based permissions enforcement on server actions
+#### ~~Step 5: Team Collaboration~~ ✅ COMPLETED (19/04/2026)
+> **Goal:** Allow inviting other users to projects, with role-based permissions.
+
+* ✅ Schema + migration `0007_project_invitations.sql` — new `project_invitations` table (token-keyed, 7-day expiry, status enum `pending/accepted/revoked/expired`, `member_role` default `member`), plus indexes on `(invited_email, status)` and `project_id`.
+* ✅ Permission helper (`src/core/auth/permissions.ts`) — `getMembership`, `requireRole`, `hasRole` with role hierarchy `owner > admin > member`.
+* ✅ Invite queries (`src/core/db/queries/invites.ts`) — `createInvitation` (generates `base64url` token), `getInvitationByToken`, `getPendingInvitationsForProject`, `revokeInvitation`, `acceptInvitation` (idempotent + expiry auto-marks), `claimPendingInvitations` (bulk accept all pending for an email on signup), `getProjectMembers`, `removeProjectMember`.
+* ✅ Invites module (`src/modules/invites/`):
+  * `actions.ts` — `getMembersAction`, `getPendingInvitationsAction`, `createInviteAction` (owner+admin only; rejects existing members + self-invites; revokes older pending for same email; returns shareable `acceptUrl`), `revokeInviteAction`, `removeMemberAction` (owner protected), `getMyRoleAction`.
+  * `email.ts` — Resend REST sender (HTML template with accept button + link fallback); no-ops with console log if `RESEND_API_KEY` unset so the shareable link flow still works in dev.
+  * `components/members-section.tsx` — client card in Project Settings with invite form, pending invitations list (revoke + copy-link per row), and current-members list (remove + role badge).
+* ✅ Public accept page (`/invite/[token]`) — outside the `(platform)` layout. Handles: invalid / already-accepted / revoked / expired / signed-out (bounces to `/sign-in?next=...` or `/sign-up?next=...&email=...`) / signed-in-wrong-email (warns) / signed-in-matching-email (auto-accepts + redirects to `/projects/:id/board`).
+* ✅ Claim-on-signup — `signup` action calls `claimPendingInvitations(user.id, email)` after user sync, so users invited before they had an account are auto-joined on signup.
+* ✅ Auth flow updates — `login` / `signup` / `signInWithGoogle` now honor a safe `next` redirect (rejects protocol-relative `//` paths); sign-in/up pages render a hidden `next` input and preserve it in cross-links; `sign-up` pre-fills `email` from the invite.
+* ✅ Role enforcement applied:
+  * **Member**: view project, create/update/move tasks, chat, agent (`generateTasks`, `acceptGeneratedTasks`, `getGenerationHistory`), load chat history.
+  * **Admin+**: delete tasks, update project settings, invite + revoke, remove non-owner members, clear chat history.
+  * **Owner only**: delete project (transfer ownership not yet exposed).
+* ✅ Settings page — `MembersSection` added above the existing GitHub section at `src/app/(platform)/projects/[projectId]/settings/page.tsx`.
+
+**Env for email (optional):** set `RESEND_API_KEY` and `INVITE_EMAIL_FROM` to send real emails; otherwise invite creation logs the accept link and the admin can copy it from the Members UI. Base URL for invite links is `APP_BASE_URL` (falls back to `NEXT_PUBLIC_APP_URL` or `http://localhost:3000`).
+
+**Run order after pulling:** `npm run db:migrate` (applies 0007).

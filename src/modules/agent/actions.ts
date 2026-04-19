@@ -7,7 +7,7 @@ import type {
   GeneratedTask,
 } from '@/types';
 import type { Task } from '@/core/db/schema';
-import { getAuthUser } from '@/core/auth';
+import { getAuthUser, requireRole } from '@/core/auth';
 import {
   saveGeneration,
   getGenerationHistory as dbGetGenerationHistory,
@@ -27,6 +27,7 @@ export async function generateTasks(
 ): Promise<ApiResponse<TaskGenerationResponse>> {
   try {
     const user = await getAuthUser();
+    await requireRole(user.id, request.projectId, 'member');
 
     // Fetch project context for the architect agent
     const project = await getProjectById(request.projectId);
@@ -140,6 +141,7 @@ export async function acceptGeneratedTasks(
 ): Promise<ApiResponse<Task[]>> {
   try {
     const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
 
     const createdTasks = await bulkCreateTasks(
       tasks.map((t) => ({
@@ -181,7 +183,8 @@ export async function getGenerationHistory(
   >
 > {
   try {
-    await getAuthUser();
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
     const history = await dbGetGenerationHistory(projectId);
 
     return {

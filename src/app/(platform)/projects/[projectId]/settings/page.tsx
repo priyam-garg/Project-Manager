@@ -1,4 +1,5 @@
 import { GithubSettingsSection } from '@/modules/github/components/github-settings-section';
+import { MembersSection } from '@/modules/invites/components/members-section';
 import { AnimatedPage } from '@/components/layout/animated-page';
 
 type Props = {
@@ -16,6 +17,7 @@ export default async function ProjectSettingsPage({ params }: Props) {
             <h1 className="text-3xl font-bold text-gradient">Project Settings</h1>
             <p className="text-muted-foreground">Manage integrations and project configuration</p>
           </div>
+          <MembersSection projectId={projectId} />
           <GithubSettingsSection projectId={projectId} />
         </div>
       </div>

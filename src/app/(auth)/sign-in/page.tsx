@@ -12,6 +12,11 @@ type Props = {
 export default async function LoginPage({ searchParams }: Props) {
   const resolvedParams = await searchParams;
   const error = resolvedParams.error as string | undefined;
+  const nextRaw = resolvedParams.next;
+  const next = typeof nextRaw === 'string' && nextRaw.startsWith('/') && !nextRaw.startsWith('//')
+    ? nextRaw
+    : '';
+  const signUpHref = next ? `/sign-up?next=${encodeURIComponent(next)}` : '/sign-up';
 
   return (
     <AnimatedPage className="min-h-screen">
@@ -36,6 +41,7 @@ export default async function LoginPage({ searchParams }: Props) {
           )}
 
           <form className="space-y-6">
+            {next && <input type="hidden" name="next" value={next} />}
             <div className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
@@ -79,6 +85,7 @@ export default async function LoginPage({ searchParams }: Props) {
           </div>
 
           <form>
+            {next && <input type="hidden" name="next" value={next} />}
             <Button
               type="submit"
               variant="outline"
@@ -94,7 +101,7 @@ export default async function LoginPage({ searchParams }: Props) {
 
           <div className="text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link href="/sign-up" className="font-semibold text-primary transition-colors hover:text-primary/80">
+            <Link href={signUpHref} className="font-semibold text-primary transition-colors hover:text-primary/80">
               Sign up
             </Link>
           </div>

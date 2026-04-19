@@ -1,7 +1,7 @@
 'use server';
 
 import type { ChatMessage, ApiResponse } from '@/types';
-import { getAuthUser } from '@/core/auth';
+import { getAuthUser, requireRole } from '@/core/auth';
 import {
   getChatMessages as dbGetChatMessages,
   saveChatMessage,
@@ -36,6 +36,7 @@ export async function sendChatMessage(
 ): Promise<ApiResponse<ChatMessage>> {
   try {
     const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
 
     const rateLimit = await consumeChatRateLimit({
       userId: user.id,
@@ -247,7 +248,8 @@ export async function loadChatHistory(
   projectId: string
 ): Promise<ApiResponse<ChatMessage[]>> {
   try {
-    await getAuthUser();
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'member');
     const messages = await dbGetChatMessages(projectId);
 
     const chatMessages: ChatMessage[] = messages.map((m) => ({
@@ -269,7 +271,8 @@ export async function loadChatHistory(
  */
 export async function clearChat(projectId: string): Promise<ApiResponse<void>> {
   try {
-    await getAuthUser();
+    const user = await getAuthUser();
+    await requireRole(user.id, projectId, 'admin');
     await dbClearChatHistory(projectId);
     return { success: true };
   } catch (error) {

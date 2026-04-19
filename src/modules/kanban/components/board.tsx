@@ -16,6 +16,7 @@ import type { Task, TaskStatus } from '@/core/db/schema';
 import { useTasksStore } from '@/stores/tasks-store';
 import { useUIStore } from '@/stores/ui-store';
 import { useTasks } from '../hooks/use-tasks';
+import { useRealtimeTasks } from '@/lib/hooks/use-realtime-tasks';
 import { moveTask } from '../actions';
 import { Column } from './column';
 import { Card } from './card';
@@ -43,6 +44,7 @@ export function Board({ projectId }: BoardProps) {
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('backlog');
   
   const { tasks, isLoading } = useTasks(projectId);
+  useRealtimeTasks(projectId);
   const { optimisticMoveTask, revertOptimisticUpdate } = useTasksStore();
   const { sidebarOpen } = useUIStore();
 
