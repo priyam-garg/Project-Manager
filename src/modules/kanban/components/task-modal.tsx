@@ -192,7 +192,7 @@ export function TaskModal() {
 
   return (
     <Dialog open={taskModalOpen} onOpenChange={closeTaskModal}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto soft-scrollbar">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <DialogTitle className="text-2xl">
@@ -292,7 +292,7 @@ export function TaskModal() {
 
           {/* Metadata */}
           {!isEditing && (
-            <div className="space-y-3 pt-4 border-t">
+            <div className="space-y-3 border-t border-white/20 pt-4 dark:border-white/10">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>Created: {new Date(task.createdAt).toLocaleDateString()}</span>
@@ -312,7 +312,7 @@ export function TaskModal() {
 
           {/* Activity Timeline */}
           {!isEditing && (
-            <div className="space-y-3 pt-4 border-t">
+            <div className="space-y-3 border-t border-white/20 pt-4 dark:border-white/10">
               <div className="flex items-center gap-2 font-medium">
                 <Activity className="h-4 w-4" />
                 <span>Activity</span>
@@ -320,7 +320,7 @@ export function TaskModal() {
               <div className="space-y-3">
                 {taskEvents.map((event) => (
                   <div key={event.id} className="flex gap-3 text-sm">
-                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary" />
+                    <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
                     <div className="flex-1">
                       <p className="text-foreground">{getEventDescription(event)}</p>
                       <p className="text-xs text-muted-foreground">

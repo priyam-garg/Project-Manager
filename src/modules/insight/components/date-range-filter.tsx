@@ -20,7 +20,7 @@ export function DateRangeFilterComponent({ value, onChange }: DateRangeFilterPro
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <span className="text-sm font-medium text-muted-foreground">Time range:</span>
-      <div className="flex gap-1 p-1 bg-muted rounded-lg">
+      <div className="flex gap-1 rounded-xl border border-white/25 bg-background/65 p-1 dark:border-white/10">
         {DATE_RANGES.map((range) => (
           <Button
             key={range.value}

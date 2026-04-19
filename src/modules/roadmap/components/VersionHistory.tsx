@@ -38,8 +38,8 @@ export function VersionHistory({ history, currentVersion, onSelectVersion }: Pro
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border bg-popover shadow-lg">
-            <div className="flex items-center justify-between border-b px-4 py-3">
+          <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-white/25 bg-popover/95 shadow-xl backdrop-blur dark:border-white/10">
+            <div className="flex items-center justify-between border-b border-white/20 px-4 py-3 dark:border-white/10">
               <h3 className="text-sm font-semibold">Version History</h3>
               <Button
                 variant="ghost"
@@ -59,8 +59,8 @@ export function VersionHistory({ history, currentVersion, onSelectVersion }: Pro
                     setIsOpen(false);
                   }}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-accent transition-colors',
-                    plan.version === currentVersion && 'bg-accent'
+                    'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-accent',
+                    plan.version === currentVersion && 'bg-accent/90'
                   )}
                 >
                   <div>

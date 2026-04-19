@@ -22,7 +22,7 @@ export function MemberPerformanceComponent({ data }: MemberPerformanceProps) {
           {data.map((member) => (
             <div
               key={member.userId}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              className="flex items-center justify-between rounded-xl border border-white/20 bg-background/55 p-3 transition-colors hover:bg-accent/50 dark:border-white/10"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">

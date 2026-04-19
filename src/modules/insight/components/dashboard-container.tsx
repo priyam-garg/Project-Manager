@@ -26,12 +26,12 @@ export function DashboardContainer({ projectId }: DashboardContainerProps) {
   const { data, isLoading } = useAnalytics(projectId, dateRange);
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="h-full overflow-y-auto soft-scrollbar">
+      <div className="mx-auto max-w-7xl space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Insights</h1>
+            <h1 className="text-3xl font-bold text-gradient">Insights</h1>
             <p className="text-muted-foreground">Project analytics and team performance</p>
           </div>
           <DateRangeFilterComponent value={dateRange} onChange={setDateRange} />
@@ -66,7 +66,7 @@ export function DashboardContainer({ projectId }: DashboardContainerProps) {
             trend={data?.metrics.completionTrend}
             icon={TrendingUp}
             isLoading={isLoading}
-            colorClass="text-purple-600 dark:text-purple-400"
+            colorClass="text-cyan-600 dark:text-cyan-400"
           />
         </div>
 

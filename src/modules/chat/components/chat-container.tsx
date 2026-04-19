@@ -29,36 +29,34 @@ export function ChatContainer({ projectId }: ChatContainerProps) {
 
   if (!mounted) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex-1 flex items-center justify-center p-8">
-            <SuggestedQuestions onQuestionClick={() => {}} />
+      <div className="flex h-full flex-col p-4 md:p-6">
+        <div className="glass-card flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 items-center justify-center p-8">
+            <SuggestedQuestions onQuestionClick={() => {}} className="w-full" />
           </div>
+          <MessageInput onSend={() => {}} isLoading={true} />
         </div>
-
-        <MessageInput onSend={() => {}} isLoading={true} />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages Area */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {showSuggestedQuestions ? (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <SuggestedQuestions onQuestionClick={handleQuestionClick} />
-          </div>
-        ) : (
-          <MessageList messages={messages} isLoading={isLoading} />
-        )}
-      </div>
+    <div className="flex h-full flex-col p-4 md:p-6">
+      <div className="glass-card flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Messages Area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {showSuggestedQuestions ? (
+            <div className="flex flex-1 items-center justify-center p-8">
+              <SuggestedQuestions onQuestionClick={handleQuestionClick} className="w-full" />
+            </div>
+          ) : (
+            <MessageList messages={messages} isLoading={isLoading} />
+          )}
+        </div>
 
-      {/* Input Area */}
-      <MessageInput 
-        onSend={handleSendMessage} 
-        isLoading={isLoading}
-      />
+        {/* Input Area */}
+        <MessageInput onSend={handleSendMessage} isLoading={isLoading} />
+      </div>
     </div>
   );
 }

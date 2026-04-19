@@ -36,7 +36,7 @@ export function PlanViewer({
     <div className="space-y-4">
       {/* Overview */}
       {overviewSections.length > 0 && (
-        <div className="rounded-lg border bg-card p-5">
+        <div className="glass-card p-5">
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-500/10 text-xs">
               📋

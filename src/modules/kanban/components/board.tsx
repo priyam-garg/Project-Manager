@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface BoardProps {
   projectId: string;
@@ -128,13 +129,13 @@ export function Board({ projectId }: BoardProps) {
   if (isLoading) {
     return (
       <section className={cn(
-        "grid gap-4 p-6 h-full",
+        'grid h-full gap-4 p-4 md:p-6',
         sidebarOpen 
           ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto"
       )}>
         {STATUSES.map((status) => (
-          <div key={status} className="bg-muted/30 rounded-lg h-96 animate-pulse" />
+          <div key={status} className="glass-card h-96 animate-pulse" />
         ))}
       </section>
     );
@@ -147,21 +148,28 @@ export function Board({ projectId }: BoardProps) {
       onDragEnd={handleDragEnd}
     >
       <section className={cn(
-        "grid gap-4 p-6 h-full",
+        'grid h-full gap-4 p-4 md:p-6',
         sidebarOpen 
           ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto"
       )}>
-        {STATUSES.map((status) => (
-          <Column
+        {STATUSES.map((status, index) => (
+          <motion.div
             key={status}
-            status={status}
-            tasks={tasksByStatus[status]}
-            onAddTask={() => {
-              setDefaultStatus(status);
-              setIsCreateDialogOpen(true);
-            }}
-          />
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+            className="min-h-0"
+          >
+            <Column
+              status={status}
+              tasks={tasksByStatus[status]}
+              onAddTask={() => {
+                setDefaultStatus(status);
+                setIsCreateDialogOpen(true);
+              }}
+            />
+          </motion.div>
         ))}
       </section>
 
@@ -173,7 +181,7 @@ export function Board({ projectId }: BoardProps) {
 
       {/* Create Task Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[540px]">
           <DialogHeader>
             <DialogTitle>Create New Task</DialogTitle>
           </DialogHeader>

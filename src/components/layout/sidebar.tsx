@@ -17,6 +17,7 @@ import {
   Home,
   Code,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -128,7 +129,7 @@ export function Sidebar() {
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -136,14 +137,22 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 border-r bg-background transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 z-40 h-screen w-72 border-r border-white/25 bg-card/80 backdrop-blur-xl transition-transform duration-300 ease-out dark:border-white/10',
           'flex flex-col',
           !sidebarOpen && '-translate-x-full'
         )}
       >
         {/* Header with logo and toggle */}
-        <div className="flex h-16 items-center justify-between border-b px-4">
-          <h1 className="text-xl font-bold">Nexus</h1>
+        <div className="flex h-16 items-center justify-between border-b border-white/25 px-4 dark:border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h1 className="text-base font-semibold tracking-tight">Nexus</h1>
+              <p className="text-[11px] text-muted-foreground">Project Intelligence</p>
+            </div>
+          </div>
           {!isMobile && (
             <Button variant="ghost" size="icon" onClick={toggleSidebar}>
               <X className="h-5 w-5" />
@@ -152,14 +161,14 @@ export function Sidebar() {
         </div>
 
         {/* Project Switcher */}
-        <div className="border-b p-4">
+        <div className="border-b border-white/25 p-4 dark:border-white/10">
           <div className="relative">
             <button
               onClick={() => setProjectMenuOpen(!projectMenuOpen)}
-              className="flex w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm hover:bg-accent"
+              className="flex w-full items-center justify-between rounded-xl border border-white/30 bg-background/60 px-3 py-2.5 text-sm transition-all hover:border-primary/35 hover:bg-accent/70 dark:border-white/10"
             >
               <div className="flex flex-col items-start overflow-hidden">
-                <span className="text-xs text-muted-foreground">Project</span>
+                <span className="text-[11px] text-muted-foreground">Current Project</span>
                 <span className="truncate font-medium">
                   {currentProject?.name || 'Select Project'}
                 </span>
@@ -174,7 +183,7 @@ export function Sidebar() {
 
             {/* Project dropdown */}
             {projectMenuOpen && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover shadow-lg">
+              <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-auto rounded-xl border border-white/30 bg-popover/95 p-1 shadow-xl backdrop-blur dark:border-white/10">
                 {projects.length > 0 ? (
                   projects.map((project) => (
                     <Link
@@ -185,13 +194,13 @@ export function Sidebar() {
                         setProjectMenuOpen(false);
                       }}
                       className={cn(
-                        'block px-3 py-2 text-sm hover:bg-accent',
-                        project.id === currentProjectId && 'bg-accent'
+                        'block rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent',
+                        project.id === currentProjectId && 'bg-accent/90'
                       )}
                     >
                       <div className="font-medium">{project.name}</div>
                       {project.description && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="line-clamp-1 text-xs text-muted-foreground">
                           {project.description}
                         </div>
                       )}
@@ -208,7 +217,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1.5 p-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -218,13 +227,13 @@ export function Sidebar() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all',
                   active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    ? 'bg-primary/90 text-primary-foreground shadow-[0_14px_30px_-20px_hsl(var(--primary))]'
+                    : 'text-muted-foreground hover:bg-accent/80 hover:text-accent-foreground'
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-[18px] w-[18px]" />
                 {item.name}
               </Link>
             );
@@ -233,12 +242,12 @@ export function Sidebar() {
 
         {/* Back to Dashboard */}
         {currentProjectId && (
-          <div className="border-t p-4">
+          <div className="border-t border-white/25 p-4 dark:border-white/10">
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent/80 hover:text-accent-foreground"
             >
-              <Home className="h-5 w-5" />
+              <Home className="h-[18px] w-[18px]" />
               Dashboard
             </Link>
           </div>

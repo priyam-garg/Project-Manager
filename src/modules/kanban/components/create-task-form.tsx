@@ -199,7 +199,7 @@ export function CreateTaskForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex gap-2 justify-end pt-4">
+      <div className="flex justify-end gap-2 border-t border-white/20 pt-4 dark:border-white/10">
         {onCancel && (
           <Button
             type="button"

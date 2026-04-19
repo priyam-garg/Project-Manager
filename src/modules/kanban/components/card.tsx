@@ -35,13 +35,13 @@ export function Card({ task }: CardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-500 text-white';
+        return 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-400/30';
       case 'medium':
-        return 'bg-yellow-500 text-white';
+        return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30';
       case 'low':
-        return 'bg-green-500 text-white';
+        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-400/30';
     }
   };
 
@@ -58,8 +58,8 @@ export function Card({ task }: CardProps) {
       {...listeners}
       onClick={handleClick}
       className={cn(
-        'rounded-lg border border-border bg-card p-3 shadow-sm cursor-pointer',
-        'hover:shadow-md hover:border-primary/50 transition-all duration-200',
+        'cursor-pointer rounded-xl border border-white/25 bg-background/70 p-3 shadow-[0_14px_25px_-24px_rgba(15,23,42,0.7)] backdrop-blur-sm transition-all duration-200 dark:border-white/10',
+        'hover:-translate-y-0.5 hover:border-primary/35 hover:bg-background/85',
         isDragging && 'cursor-grabbing'
       )}
     >
@@ -82,7 +82,7 @@ export function Card({ task }: CardProps) {
 
           {task.assigneeId && (
             <div className="flex items-center">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs font-medium text-primary">
                 {task.assigneeId.charAt(0).toUpperCase()}
               </div>
             </div>

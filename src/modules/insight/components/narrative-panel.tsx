@@ -42,11 +42,11 @@ export function NarrativePanel({ projectId, dateRange, hasData }: NarrativePanel
   }
 
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="space-y-4 border-primary/20 bg-primary/5 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-purple-500" />
+          <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold">AI Insight Summary</h2>
         </div>
         <Button

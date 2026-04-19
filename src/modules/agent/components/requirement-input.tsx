@@ -56,13 +56,13 @@ export function RequirementInput({ onGenerate, isLoading }: RequirementInputProp
         </div>
 
         {showExamples && (
-          <div className="p-3 bg-muted rounded-lg space-y-2 animate-in fade-in-50 slide-in-from-top-2">
+          <div className="animate-in space-y-2 rounded-xl border border-white/25 bg-background/60 p-3 fade-in-50 slide-in-from-top-2 dark:border-white/10">
             <p className="text-xs font-medium text-muted-foreground">Click to use:</p>
             {examplePrompts.map((prompt, index) => (
               <button
                 key={index}
                 onClick={() => handleExampleClick(prompt)}
-                className="block w-full text-left text-sm p-2 rounded hover:bg-background transition-colors"
+                className="block w-full rounded-lg p-2 text-left text-sm transition-colors hover:bg-accent/70"
               >
                 {prompt}
               </button>

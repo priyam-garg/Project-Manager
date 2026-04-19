@@ -63,9 +63,9 @@ export function GeneratedTasksList({
   const allSelected = selectedCount === tasks.length;
 
   return (
-    <div className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+    <div className="animate-in space-y-6 fade-in-50 slide-in-from-bottom-4 duration-500">
       {/* Reasoning Section */}
-      <Card className="p-4 bg-muted/50">
+      <Card className="border-primary/20 bg-primary/5 p-4">
         <div className="flex gap-3">
           <Lightbulb className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
           <div className="flex-1 space-y-1">
@@ -117,7 +117,7 @@ export function GeneratedTasksList({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4 border-t">
+      <div className="flex gap-3 border-t border-white/20 pt-4 dark:border-white/10">
         <Button
           onClick={handleAcceptAll}
           disabled={isAccepting || tasks.length === 0}

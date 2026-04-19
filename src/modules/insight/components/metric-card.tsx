@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, TrendingDown, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface MetricCardProps {
   label: string;
@@ -41,41 +42,48 @@ export function MetricCard({
   const isNegativeTrend = trend !== undefined && trend < 0;
 
   return (
-    <Card className="p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="space-y-1 flex-1">
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="text-3xl font-bold">{value}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/35">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="text-3xl font-bold">{value}</p>
+          </div>
+          <div className={cn('rounded-xl bg-muted/70 p-2.5', colorClass)}>
+            <Icon className="h-6 w-6" />
+          </div>
         </div>
-        <div className={cn('p-2 rounded-lg bg-muted', colorClass)}>
-          <Icon className="h-6 w-6" />
-        </div>
-      </div>
 
-      {trend !== undefined && (
-        <div className="mt-4 flex items-center gap-1">
-          {isPositiveTrend && (
-            <>
-              <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                +{trend.toFixed(1)}%
-              </span>
-            </>
-          )}
-          {isNegativeTrend && (
-            <>
-              <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
-              <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                {trend.toFixed(1)}%
-              </span>
-            </>
-          )}
-          {!isPositiveTrend && !isNegativeTrend && (
-            <span className="text-sm text-muted-foreground">No change</span>
-          )}
-          <span className="text-sm text-muted-foreground ml-1">vs last period</span>
-        </div>
-      )}
-    </Card>
+        {trend !== undefined && (
+          <div className="mt-4 flex items-center gap-1">
+            {isPositiveTrend && (
+              <>
+                <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                  +{trend.toFixed(1)}%
+                </span>
+              </>
+            )}
+            {isNegativeTrend && (
+              <>
+                <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                  {trend.toFixed(1)}%
+                </span>
+              </>
+            )}
+            {!isPositiveTrend && !isNegativeTrend && (
+              <span className="text-sm text-muted-foreground">No change</span>
+            )}
+            <span className="ml-1 text-sm text-muted-foreground">vs last period</span>
+          </div>
+        )}
+      </Card>
+    </motion.div>
   );
 }

@@ -179,7 +179,7 @@ Describe your project goals here.
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto soft-scrollbar sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {step === 1 ? 'Create New Project' : 'Set Implementation Plan'}
@@ -259,8 +259,10 @@ Describe your project goals here.
           <div className="space-y-4">
             {/* Choose mode */}
             {planMode === 'choose' && (
-              <div className="flex flex-col items-center py-6 gap-6">
-                <Sparkles className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center gap-6 rounded-xl border border-white/25 bg-background/45 py-6 dark:border-white/10">
+                <div className="rounded-xl bg-primary/12 p-3 text-primary">
+                  <Sparkles className="h-7 w-7" />
+                </div>
                 <p className="text-sm text-muted-foreground text-center max-w-sm">
                   Your project <strong>{name}</strong> has been created. Now set up the
                   implementation plan.
@@ -315,10 +317,10 @@ Describe your project goals here.
                   <textarea
                     value={editableContent}
                     onChange={(e) => setEditableContent(e.target.value)}
-                    className="w-full min-h-[300px] rounded-lg border bg-background px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full min-h-[300px] rounded-xl border border-white/25 bg-background/70 px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/10"
                   />
                 ) : (
-                  <div className="rounded-lg border bg-card p-4 max-h-[400px] overflow-y-auto prose prose-sm dark:prose-invert">
+                  <div className="glass-card soft-scrollbar max-h-[400px] overflow-y-auto p-4 prose prose-sm dark:prose-invert">
                     <ReactMarkdown>{editableContent}</ReactMarkdown>
                   </div>
                 )}
@@ -345,7 +347,7 @@ Describe your project goals here.
                 <textarea
                   value={manualContent}
                   onChange={(e) => setManualContent(e.target.value)}
-                  className="w-full min-h-[300px] rounded-lg border bg-background px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full min-h-[300px] rounded-xl border border-white/25 bg-background/70 px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/10"
                   placeholder={templateText}
                   autoFocus
                 />

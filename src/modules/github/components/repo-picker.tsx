@@ -57,7 +57,7 @@ export function RepoPicker({ projectId, onSelected }: Props) {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <div className="max-h-80 overflow-y-auto border rounded-md divide-y">
+      <div className="soft-scrollbar max-h-80 divide-y overflow-y-auto rounded-xl border border-white/25 bg-background/55 dark:border-white/10">
         {filtered.length === 0 && (
           <div className="p-4 text-sm text-muted-foreground">No repositories found.</div>
         )}

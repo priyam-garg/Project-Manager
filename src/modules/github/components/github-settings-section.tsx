@@ -73,9 +73,11 @@ export function GithubSettingsSection({ projectId }: Props) {
   }
 
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="space-y-4 p-6">
       <div className="flex items-center gap-3">
-        <Github className="h-6 w-6" />
+        <div className="rounded-xl bg-primary/12 p-2 text-primary">
+          <Github className="h-5 w-5" />
+        </div>
         <div>
           <h2 className="text-lg font-semibold">GitHub Integration</h2>
           <p className="text-sm text-muted-foreground">

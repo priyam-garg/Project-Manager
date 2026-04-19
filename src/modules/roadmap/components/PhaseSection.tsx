@@ -60,9 +60,9 @@ export function PhaseSection({
   };
 
   return (
-    <div className="rounded-lg border bg-card transition-all">
+    <div className="glass-card transition-all">
       {/* Phase Header */}
-      <div className="flex w-full items-center justify-between p-4 rounded-t-lg">
+      <div className="flex w-full items-center justify-between rounded-t-lg p-4">
         <div
           role="button"
           tabIndex={0}
@@ -96,7 +96,7 @@ export function PhaseSection({
 
       {/* Phase Content */}
       {!isCollapsed && (
-        <div className="divide-y border-t px-4 pb-4">
+        <div className="divide-y border-t border-white/20 px-4 pb-4 dark:border-white/10">
           {sections.map((section) => (
             <div key={section.id} className="py-3 first:pt-4">
               <div className="flex items-center justify-between mb-2">
@@ -120,7 +120,7 @@ export function PhaseSection({
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full min-h-[120px] rounded-md border bg-background px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full min-h-[120px] rounded-xl border border-white/25 bg-background/70 px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/10"
                     placeholder="Enter content (use - for bullet points)"
                   />
                   <div className="flex gap-2 justify-end">

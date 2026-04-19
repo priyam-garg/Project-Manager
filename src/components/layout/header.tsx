@@ -68,7 +68,7 @@ export function Header() {
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/25 bg-card/70 px-4 backdrop-blur-xl md:px-6 dark:border-white/10">
       <div className="flex items-center gap-4">
         {/* Hamburger menu button - shows when sidebar is closed */}
         {!sidebarOpen && (
@@ -96,17 +96,17 @@ export function Header() {
                 return (
                   <li key={crumb.href} className="flex items-center space-x-2">
                     {index > 0 && (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
                     )}
                     {isLast ? (
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="rounded-full bg-accent/70 px-2.5 py-1 text-xs font-semibold text-foreground md:text-sm md:bg-transparent md:px-0 md:py-0">
                         {crumb.label}
                       </span>
                     ) : (
                       <Link
                         href={crumb.href}
                         className={cn(
-                          'text-sm font-medium text-muted-foreground',
+                          'text-xs font-medium text-muted-foreground md:text-sm',
                           'hover:text-foreground transition-colors'
                         )}
                       >
@@ -124,9 +124,9 @@ export function Header() {
       {/* Right side: Project name and theme toggle */}
       <div className="flex items-center gap-4">
         {currentProject && (
-          <div className="hidden md:flex flex-col items-end">
+          <div className="hidden rounded-xl border border-white/30 bg-background/65 px-3 py-1.5 md:flex md:flex-col md:items-end dark:border-white/10">
             <span className="text-xs text-muted-foreground">Current Project</span>
-            <span className="text-sm font-medium">{currentProject.name}</span>
+            <span className="max-w-[220px] truncate text-sm font-medium">{currentProject.name}</span>
           </div>
         )}
         <UserNav />

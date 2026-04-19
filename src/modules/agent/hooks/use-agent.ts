@@ -15,7 +15,10 @@ export function useAgent(projectId: string) {
     if (result.success && result.data) {
       setCurrentGeneration(result.data);
       setHistory((prev) => [...prev, { requirement, result: result.data! }]);
+      return result.data;
     }
+
+    return null;
   };
 
   const acceptTasks = async (tasks: GeneratedTask[]) => {

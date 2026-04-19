@@ -63,7 +63,7 @@ function FileTree({
     return (
       <button
         onClick={() => onSelect(node.path)}
-        className={`flex items-center gap-1 w-full text-left px-2 py-1 text-sm hover:bg-accent rounded ${
+        className={`flex w-full items-center gap-1 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-accent ${
           selected === node.path ? 'bg-accent font-medium' : ''
         }`}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
@@ -85,7 +85,7 @@ function FileTree({
       {node.name && (
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-1 w-full text-left px-2 py-1 text-sm hover:bg-accent rounded"
+          className="flex w-full items-center gap-1 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-accent"
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
         >
           {open ? <FolderOpen className="h-3.5 w-3.5 shrink-0" /> : <Folder className="h-3.5 w-3.5 shrink-0" />}
@@ -155,8 +155,8 @@ export function CodeBrowser({ projectId }: Props) {
 
   if (!connected) {
     return (
-      <div className="flex items-center justify-center h-full p-12">
-        <Card className="p-8 text-center max-w-md space-y-4">
+      <div className="flex h-full items-center justify-center p-12">
+        <Card className="max-w-md space-y-4 p-8 text-center">
           <Github className="h-12 w-12 mx-auto text-muted-foreground" />
           <h2 className="text-lg font-semibold">No repository connected</h2>
           <p className="text-sm text-muted-foreground">
@@ -168,23 +168,23 @@ export function CodeBrowser({ projectId }: Props) {
   }
 
   return (
-    <div className="flex h-full">
-      <aside className="w-72 border-r overflow-y-auto p-2 shrink-0">
+    <div className="flex h-full gap-4 p-4 md:p-6">
+      <aside className="glass-card soft-scrollbar w-72 shrink-0 overflow-y-auto p-2">
         {tree ? (
           <FileTree node={tree} onSelect={handleSelect} selected={selectedPath} />
         ) : (
           <Skeleton className="h-64 w-full" />
         )}
       </aside>
-      <main className="flex-1 overflow-auto">
+      <main className="glass-card soft-scrollbar flex-1 overflow-auto">
         {!selectedPath && (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Select a file to view its contents
           </div>
         )}
         {selectedPath && (
           <div>
-            <div className="border-b px-4 py-2 text-sm font-mono bg-muted/50">{selectedPath}</div>
+            <div className="border-b border-white/20 bg-muted/40 px-4 py-2 text-sm font-mono dark:border-white/10">{selectedPath}</div>
             {isLoadingFile && <Skeleton className="m-4 h-64" />}
             {!isLoadingFile && fileContent && (
               <SyntaxHighlighter

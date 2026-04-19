@@ -62,7 +62,7 @@ export function MessageInput({
   const canSend = message.trim().length > 0 && !isLoading;
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="border-t border-white/20 bg-background/45 p-4 dark:border-white/10">
       <div className="flex gap-2 items-end max-w-4xl mx-auto">
         <Textarea
           ref={textareaRef}
@@ -83,7 +83,7 @@ export function MessageInput({
           onClick={handleSend}
           disabled={!canSend}
           size="icon"
-          className="flex-shrink-0 h-[44px] w-[44px]"
+          className="h-[44px] w-[44px] flex-shrink-0"
         >
           <Send className="h-4 w-4" />
           <span className="sr-only">Send message</span>
@@ -91,7 +91,7 @@ export function MessageInput({
       </div>
       
       {/* Keyboard shortcut hint */}
-      <div className="text-xs text-muted-foreground text-center mt-2">
+      <div className="mt-2 text-center text-xs text-muted-foreground">
         Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">Enter</kbd> to send, 
         <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono ml-1">Shift+Enter</kbd> for new line
       </div>

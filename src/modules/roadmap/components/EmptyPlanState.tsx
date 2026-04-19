@@ -66,7 +66,7 @@ Describe your project's goals and scope here.
         <textarea
           value={manualContent}
           onChange={(e) => setManualContent(e.target.value)}
-          className="w-full min-h-[400px] rounded-lg border bg-background px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="w-full min-h-[400px] rounded-xl border border-white/25 bg-background/70 px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/10"
           placeholder={templateText}
         />
         <div className="flex justify-end gap-2">
@@ -92,8 +92,8 @@ Describe your project's goals and scope here.
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="mb-6 rounded-full bg-primary/10 p-4">
+    <div className="glass-card flex flex-col items-center justify-center px-4 py-16">
+      <div className="mb-6 rounded-2xl bg-primary/12 p-4">
         <Sparkles className="h-10 w-10 text-primary" />
       </div>
       <h2 className="text-2xl font-bold mb-2">No Implementation Plan Yet</h2>

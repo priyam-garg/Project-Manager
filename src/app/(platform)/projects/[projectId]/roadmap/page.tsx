@@ -10,6 +10,7 @@ import { VersionHistory } from '@/modules/roadmap/components/VersionHistory';
 import { Button } from '@/components/ui/button';
 import { Pencil, Eye, RefreshCw, Loader2 } from 'lucide-react';
 import { useProjectsStore } from '@/stores/projects-store';
+import { AnimatedPage } from '@/components/layout/animated-page';
 import type { ImplementationPlan, PlanSection } from '@/types';
 
 export default function RoadmapPage() {
@@ -57,41 +58,46 @@ export default function RoadmapPage() {
 
   if (isLoading && !plan) {
     return (
-      <div className="flex items-center justify-center h-full py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <AnimatedPage className="h-full">
+        <div className="flex h-full items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AnimatedPage>
     );
   }
 
   // No plan exists — show empty state
   if (!plan && !isLoading) {
     return (
-      <div className="p-6">
-        <EmptyPlanState
-          onGenerate={async () => {
-            if (project) {
-              await generateNew({
-                name: project.name,
-                description: project.description ?? undefined,
-                techStack: (project.techStack as string[]) ?? undefined,
-              });
-            }
-          }}
-          onUpload={async (content) => {
-            await uploadNew(content);
-          }}
-          isGenerating={isGenerating}
-        />
-      </div>
+      <AnimatedPage className="h-full">
+        <div className="p-6">
+          <EmptyPlanState
+            onGenerate={async () => {
+              if (project) {
+                await generateNew({
+                  name: project.name,
+                  description: project.description ?? undefined,
+                  techStack: (project.techStack as string[]) ?? undefined,
+                });
+              }
+            }}
+            onUpload={async (content) => {
+              await uploadNew(content);
+            }}
+            isGenerating={isGenerating}
+          />
+        </div>
+      </AnimatedPage>
     );
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <AnimatedPage className="h-full">
+      <div className="mx-auto max-w-4xl space-y-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Implementation Plan</h1>
+          <h1 className="text-2xl font-bold text-gradient">Implementation Plan</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {displayPlan?.source === 'ai_generated' ? '🤖 AI Generated' : '📝 Manual'}
             {displayPlan && ` · Version ${displayPlan.version}`}
@@ -200,6 +206,7 @@ export default function RoadmapPage() {
           onUpdateSection={updateSection}
         />
       )}
-    </div>
+      </div>
+    </AnimatedPage>
   );
 }

@@ -17,14 +17,16 @@ export function MessageItem({ message }: MessageItemProps) {
   return (
     <div
       className={cn(
-        'flex gap-3 p-4 rounded-lg',
-        isUser ? 'bg-muted/50' : 'bg-background'
+        'flex gap-3 rounded-xl border p-4',
+        isUser
+          ? 'border-primary/20 bg-primary/5'
+          : 'border-white/20 bg-background/65 dark:border-white/10'
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
-          'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
+          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
           isUser ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
         )}
       >

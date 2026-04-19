@@ -35,10 +35,10 @@ export function TaskEditor({ task, isSelected, onToggleSelect, onChange }: TaskE
   return (
     <div
       className={cn(
-        'p-4 rounded-lg border-2 transition-all',
+        'rounded-xl border p-4 transition-all',
         isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-border bg-card hover:border-primary/50'
+          ? 'border-primary/40 bg-primary/8'
+          : 'border-white/20 bg-background/55 hover:border-primary/35 dark:border-white/10'
       )}
     >
       <div className="flex items-start gap-3">

@@ -29,16 +29,18 @@ export function Column({ status, tasks, onAddTask }: ColumnProps) {
   const taskIds = tasks.map((task) => task.id);
 
   return (
-    <article className="flex flex-col bg-muted/30 rounded-lg h-full overflow-hidden">
+    <article className="glass-card flex h-full flex-col overflow-hidden">
       {/* Column Header — pinned */}
-      <header className="flex items-center justify-between p-4 border-b border-border shrink-0">
+      <header className="shrink-0 border-b border-white/25 p-4 dark:border-white/10">
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-sm text-foreground">
+          <h2 className="text-sm font-semibold text-foreground">
             {statusLabels[status]}
           </h2>
-          <span className="flex items-center justify-center min-w-6 h-6 px-2 rounded-full bg-muted text-xs font-medium text-muted-foreground">
+          <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/12 px-2 text-xs font-medium text-primary">
             {tasks.length}
           </span>
+        </div>
         </div>
       </header>
 
@@ -46,16 +48,16 @@ export function Column({ status, tasks, onAddTask }: ColumnProps) {
       <div
         ref={setNodeRef}
         className={cn(
-          'flex-1 p-3 space-y-2 overflow-y-auto min-h-0'
+          'soft-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto p-3'
         )}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.length > 0 ? (
             tasks.map((task) => <Card key={task.id} task={task} />)
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-sm text-muted-foreground">No tasks yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/30 bg-background/35 py-10 text-center dark:border-white/10">
+              <p className="text-sm font-medium text-foreground">No tasks yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Drag tasks here or add a new one
               </p>
             </div>
@@ -64,7 +66,7 @@ export function Column({ status, tasks, onAddTask }: ColumnProps) {
       </div>
 
       {/* Add Task Button — pinned */}
-      <footer className="p-3 border-t border-border shrink-0">
+      <footer className="shrink-0 border-t border-white/25 p-3 dark:border-white/10">
         <Button
           variant="ghost"
           size="sm"

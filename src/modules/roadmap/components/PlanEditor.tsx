@@ -64,14 +64,14 @@ export function PlanEditor({ content, onSave, isLoading }: Props) {
 
       {/* Editor / Preview */}
       {showPreview ? (
-        <div className="rounded-lg border bg-card p-6 prose prose-sm dark:prose-invert max-w-none min-h-[400px]">
+        <div className="glass-card min-h-[400px] max-w-none p-6 prose prose-sm dark:prose-invert">
           <ReactMarkdown>{editContent}</ReactMarkdown>
         </div>
       ) : (
         <textarea
           value={editContent}
           onChange={(e) => setEditContent(e.target.value)}
-          className="w-full min-h-[400px] rounded-lg border bg-background px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="w-full min-h-[400px] rounded-xl border border-white/25 bg-background/70 px-4 py-3 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/10"
           placeholder={`# Overview\nProject overview...\n\n## Phase 1: Foundation\n### Goals\n- ...\n### Tasks\n- ...\n### Deliverables\n- ...`}
         />
       )}

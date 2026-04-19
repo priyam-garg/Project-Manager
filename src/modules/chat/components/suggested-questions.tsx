@@ -13,28 +13,28 @@ const suggestedQuestions = [
   {
     icon: TrendingUp,
     question: 'What is the current sprint progress?',
-    color: 'text-blue-500',
+    color: 'text-sky-500',
   },
   {
     icon: Users,
     question: 'Show me tasks assigned to team members',
-    color: 'text-green-500',
+    color: 'text-emerald-500',
   },
   {
     icon: Calendar,
     question: 'What are the high-priority tasks this week?',
-    color: 'text-orange-500',
+    color: 'text-amber-500',
   },
   {
     icon: MessageSquare,
     question: 'Summarize recent project activity',
-    color: 'text-purple-500',
+    color: 'text-cyan-500',
   },
 ];
 
 export function SuggestedQuestions({ onQuestionClick, className }: SuggestedQuestionsProps) {
   return (
-    <div className={cn('space-y-4 animate-in fade-in-50 duration-500', className)}>
+    <div className={cn('animate-in space-y-4 fade-in-50 duration-500', className)}>
       <div className="text-center space-y-2">
         <h3 className="text-lg font-semibold">Ask about your project</h3>
         <p className="text-sm text-muted-foreground">
@@ -50,8 +50,8 @@ export function SuggestedQuestions({ onQuestionClick, className }: SuggestedQues
               key={index}
               variant="outline"
               className={cn(
-                'h-auto py-4 px-4 justify-start text-left',
-                'hover:bg-accent hover:border-primary/50 transition-all',
+                'h-auto justify-start border-white/30 bg-background/65 px-4 py-4 text-left dark:border-white/10',
+                'transition-all hover:-translate-y-0.5 hover:bg-accent/80 hover:border-primary/35',
                 'animate-in fade-in-50 slide-in-from-bottom-4'
               )}
               style={{ animationDelay: `${index * 100}ms` }}

@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '@/modules/projects/hooks/use-projects';
 import { useProjectsStore } from '@/stores/projects-store';
+import { AnimatedCard, AnimatedPage } from '@/components/layout/animated-page';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, FolderKanban, Calendar } from 'lucide-react';
+import { Plus, FolderKanban, Calendar, Sparkles } from 'lucide-react';
 import { CreateProjectDialog } from '@/modules/projects/components/create-project-dialog';
 
 export default function ProjectsDashboardPage() {
@@ -25,32 +26,37 @@ export default function ProjectsDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-6 space-y-6">
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-5 w-96" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-48" />
-            ))}
+      <AnimatedPage className="h-full">
+        <div className="h-full overflow-y-auto soft-scrollbar">
+          <div className="mx-auto max-w-6xl space-y-6 p-6">
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-5 w-96" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-52 rounded-2xl" />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </AnimatedPage>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <AnimatedPage className="h-full">
+      <div className="h-full overflow-y-auto soft-scrollbar">
+        <div className="mx-auto max-w-6xl space-y-6 p-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold">Projects</h1>
-            <p className="text-muted-foreground">
-              Manage and organize your projects
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground dark:border-white/10">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              Workspace Overview
             </p>
+            <h1 className="text-3xl font-bold text-gradient">Projects</h1>
+            <p className="text-muted-foreground">Manage and organize your active workspaces</p>
           </div>
           <Button size="lg" className="gap-2" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4" />
@@ -60,49 +66,50 @@ export default function ProjectsDashboardPage() {
 
         {/* Projects Grid */}
         {projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
-              <Card
-                key={project.id}
-                className="p-6 hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => {
-                  setCurrentProject(project.id);
-                  router.push(`/projects/${project.id}/board`);
-                }}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <FolderKanban className="h-6 w-6 text-primary" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project, index) => (
+              <AnimatedCard key={project.id} delay={index * 0.05}>
+                <Card
+                  className="group cursor-pointer p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/35"
+                  onClick={() => {
+                    setCurrentProject(project.id);
+                    router.push(`/projects/${project.id}/board`);
+                  }}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="rounded-xl bg-primary/12 p-3 text-primary transition-colors group-hover:bg-primary/20">
+                        <FolderKanban className="h-6 w-6" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-semibold transition-colors group-hover:text-primary">
+                        {project.name}
+                      </h3>
+                      {project.description && (
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {project.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>
+                        Created {new Date(project.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
-                      {project.name}
-                    </h3>
-                    {project.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {project.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    <span>
-                      Created {new Date(project.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </AnimatedCard>
             ))}
           </div>
         ) : (
           <Card className="p-12">
             <div className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <FolderKanban className="h-8 w-8 text-muted-foreground" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                <FolderKanban className="h-8 w-8" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">No projects yet</h3>
@@ -121,6 +128,7 @@ export default function ProjectsDashboardPage() {
 
       {/* Create Project Dialog */}
       <CreateProjectDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
-    </div>
+      </div>
+    </AnimatedPage>
   );
 }

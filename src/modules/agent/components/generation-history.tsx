@@ -36,8 +36,8 @@ export function GenerationHistory({ history, onSelect, currentId }: GenerationHi
             <Card
               key={item.id}
               className={cn(
-                'p-3 cursor-pointer transition-all hover:border-primary/50',
-                isActive && 'border-primary bg-primary/5'
+                'cursor-pointer border-white/25 p-3 transition-all hover:border-primary/40 hover:bg-accent/50 dark:border-white/10',
+                isActive && 'border-primary/40 bg-primary/8'
               )}
               onClick={() => onSelect(item)}
             >
