@@ -148,6 +148,7 @@ export function Board({ projectId }: BoardProps) {
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveTask(null)}
     >
       <section className={cn(
         'grid h-full gap-4 p-4 md:p-6',
@@ -176,7 +177,7 @@ export function Board({ projectId }: BoardProps) {
       </section>
 
       <DragOverlay>
-        {activeTask ? <Card task={activeTask} /> : null}
+        {activeTask ? <Card task={activeTask} isOverlay /> : null}
       </DragOverlay>
 
       <TaskModal />

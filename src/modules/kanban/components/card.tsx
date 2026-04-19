@@ -9,20 +9,22 @@ import { cn } from '@/lib/utils';
 
 interface CardProps {
   task: Task;
+  isOverlay?: boolean;
 }
 
-export function Card({ task }: CardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: task.id,
-  });
+export function Card({ task, isOverlay = false }: CardProps) {
+  const sortable = useSortable({ id: task.id, disabled: isOverlay });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
 
   const openTaskModal = useUIStore((state) => state.openTaskModal);
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  const style = isOverlay
+    ? undefined
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      };
 
   const handleClick = (e: React.MouseEvent) => {
     // If listeners are on the card, dnd-kit might take over the events.
@@ -52,10 +54,10 @@ export function Card({ task }: CardProps) {
 
   return (
     <div
-      ref={setNodeRef}
+      ref={isOverlay ? undefined : setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(isOverlay ? {} : attributes)}
+      {...(isOverlay ? {} : listeners)}
       onClick={handleClick}
       className={cn(
         'cursor-pointer rounded-xl border border-white/25 bg-background/70 p-3 shadow-[0_14px_25px_-24px_rgba(15,23,42,0.7)] backdrop-blur-sm transition-all duration-200 dark:border-white/10',

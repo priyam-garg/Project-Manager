@@ -28,10 +28,12 @@ export const useTasksStore = create<TasksState>((set) => ({
   setTasks: (tasks) => set({ tasks, error: null }),
 
   addTask: (task) =>
-    set((state) => ({
-      tasks: [...state.tasks, task],
-      error: null,
-    })),
+    set((state) => {
+      if (state.tasks.some((t) => t.id === task.id)) {
+        return { tasks: state.tasks, error: null };
+      }
+      return { tasks: [...state.tasks, task], error: null };
+    }),
 
   updateTask: (taskId, updates) =>
     set((state) => ({
