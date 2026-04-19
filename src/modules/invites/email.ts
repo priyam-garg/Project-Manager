@@ -1,4 +1,5 @@
 import 'server-only';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 interface InviteEmailParams {
   to: string;
@@ -8,18 +9,42 @@ interface InviteEmailParams {
   expiresAt: Date;
 }
 
+let cachedTransport: Transporter | null = null;
+
+function getTransport(): Transporter | null {
+  if (cachedTransport) return cachedTransport;
+
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+
+  const port = Number(process.env.SMTP_PORT || 465);
+  const secure = process.env.SMTP_SECURE
+    ? process.env.SMTP_SECURE === 'true'
+    : port === 465;
+
+  cachedTransport = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+  });
+  return cachedTransport;
+}
+
 /**
- * Send an invitation email. Uses Resend via REST if configured; otherwise
- * logs the invite and returns without error so the shareable link flow
- * still works in local/dev environments.
+ * Send an invitation email via SMTP (e.g. Gmail app password). If SMTP is
+ * not configured, logs the invite and returns without error so the
+ * shareable-link flow still works in local/dev environments.
  */
 export async function sendInviteEmail(params: InviteEmailParams): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.INVITE_EMAIL_FROM || 'Nexus <onboarding@resend.dev>';
+  const transport = getTransport();
+  const from = process.env.INVITE_EMAIL_FROM || process.env.SMTP_USER;
 
-  if (!apiKey) {
+  if (!transport || !from) {
     console.info(
-      `[invites] RESEND_API_KEY not set — skipping email to ${params.to}. Link: ${params.acceptUrl}`,
+      `[invites] SMTP not configured — skipping email to ${params.to}. Link: ${params.acceptUrl}`,
     );
     return;
   }
@@ -55,23 +80,24 @@ export async function sendInviteEmail(params: InviteEmailParams): Promise<void> 
     </div>
   `;
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  const text = [
+    `${params.inviterName} invited you to ${params.projectName} on Nexus.`,
+    ``,
+    `Accept: ${params.acceptUrl}`,
+    ``,
+    `This invitation expires on ${expires}.`,
+  ].join('\n');
+
+  try {
+    await transport.sendMail({
       from,
       to: params.to,
       subject,
       html,
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error(`[invites] Resend API error ${res.status}: ${body}`);
+      text,
+    });
+  } catch (err) {
+    console.error('[invites] SMTP send failed:', err);
   }
 }
 
