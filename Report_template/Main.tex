@@ -1,0 +1,690 @@
+\documentclass[a4paper, 11pt, oneside]{Dissertation}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage[english]{babel}
+\usepackage{longtable}
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{array}
+\usepackage{float}
+\usepackage[section]{placeins}
+\usepackage{url}
+\usepackage[numbers]{natbib}
+
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\graphicspath{{./image/}}
+
+\long\def\symbolfootnote[#1]#2{\begingroup%
+\def\thefootnote{\fnsymbol{footnote}}\footnote[#1]{#2}\endgroup}
+\renewcommand{\baselinestretch}{1.2}
+\onecolumn
+
+%% ----------------------------------------------------------------
+\begin{document}
+\sloppy
+\pagenumbering{roman}
+
+%% Cover Page
+\thispagestyle{empty}
+\begin{center}
+{\Large \bf Project Nexus: AI-Augmented Software Project Management Platform}
+
+\vspace*{1.75cm}
+{\large Project report submitted in partial fulfillment\\}
+{\large of the requirements for the degree of \\}
+
+\vspace*{1cm}
+{\it {\large Bachelor of Technology} \\
+{\large in\\}
+{\large Computer Science and Engineering \\}}
+
+\vspace*{1cm}
+{\large by}
+
+\vspace*{1cm}
+{\large Priyam Garg - 23ucs682\\}
+{\large Lakshya Dhaka - 23ucs632\\}
+{\large Saikiran Phulari - 23uec642\\}
+
+\vspace*{5mm}
+{\large Under Guidance of \\}
+{\large Dr. Kanjalochan Jena\\}
+
+\vspace*{1.0cm}
+{\psfig{figure= LNMIIT.png ,width=44mm}\\}
+
+\vspace*{2.0cm}
+{\large Department of Computer Science and Engineering \\}
+{\large The LNM Institute of Information Technology, Jaipur\\}
+
+\vspace*{1.0cm}
+{\large April 2026\\}
+\end{center}
+
+\clearpage
+
+%% COPYRIGHT PAGE
+\thispagestyle{empty}
+\vfill
+\begin{center}
+\vspace*{\fill} \textcopyright \textbf{The LNM Institute of Information Technology, Jaipur-2026.}\\
+\textbf{All rights reserved.}
+\end{center}
+\clearpage
+
+%% CERTIFICATE PAGE
+\newpage
+\thispagestyle{empty}
+\vspace*{1.5cm}
+\begin{center}
+{\Large The LNM Institute of Information Technology\\}
+{\Large Jaipur, India\\}
+\vspace*{3cm}
+{\Large \bf CERTIFICATE\\}
+\vspace*{1cm}
+\noindent
+\end{center}
+This is to certify that the project entitled ``Project Nexus: AI-Augmented Software Project Management Platform'', submitted by Priyam Garg (Roll No. 23ucs682), Lakshya Dhaka (Roll No. 23ucs632) and Saikiran Phulari (Roll No. 23uec642) in partial fulfillment of the requirement of degree in Bachelor of Technology (B. Tech), is a bonafide record of work carried out by them at the Department of Computer Science and Engineering, The LNM Institute of Information Technology, Jaipur, India, during the academic session 2025--2026 under my supervision and guidance and the same has not been submitted elsewhere for award of any other degree. In my opinion, this report is of standard required for the award of the degree of Bachelor of Technology (B. Tech).
+
+\vspace*{3cm}
+\begin{tabular}{cc}
+\underline{\makebox[1in]{}} & \hspace*{5cm} \underline{\makebox[2.5in]{}} \\
+Date & \hspace*{5cm} Adviser: Dr. Kanjalochan Jena
+\end{tabular}
+
+% ACKNOWLEDGEMENTS PAGE
+\chapter*{Acknowledgments}
+\label{ch:ack}
+The authors sincerely thank Dr. Kanjalochan Jena, our project guide, faculty members, and peers for their continuous guidance throughout the design and implementation of Project Nexus. We are grateful to the Department of Computer Science and Engineering, LNMIIT, for providing the academic environment and infrastructure necessary for carrying out this work.
+
+We also acknowledge the broader open-source ecosystem whose tools and libraries enabled rapid experimentation and robust implementation, including the maintainers of Next.js, Supabase, Drizzle ORM, Qdrant, and LangGraph. Their publicly available documentation and community support played an important role in reducing development friction and helping us move from conceptual design to a functional, modular system.
+
+Finally, we thank all reviewers and test users who provided practical feedback on usability, workflow gaps, and reliability concerns. Their suggestions directly influenced key system enhancements such as role-based collaboration, retrieval quality improvements, and GitHub-driven automation.
+
+% Abstract
+\chapter*{Abstract}
+\label{ch:abstract}
+Modern software teams use multiple disconnected tools for task tracking, planning, code collaboration, and decision documentation. This fragmentation often causes context loss, delayed execution, and weak traceability between requirements and implementation. Project Nexus addresses this problem by proposing and implementing an AI-augmented project management platform that unifies project planning, task execution, contextual assistance, collaboration, analytics, and repository intelligence in a single full-stack system.
+
+The platform is implemented using Next.js and TypeScript, with PostgreSQL (Supabase) and Drizzle ORM for structured persistence, Qdrant for vector retrieval, and a multi-provider AI runtime for conversational and generative workflows. Nexus supports project and task lifecycle management through a Kanban board with event logging, optimistic updates, and realtime synchronization. It also introduces an Architect Agent that decomposes requirement prompts into structured engineering tasks using a Plan-Critique-Finalize workflow. To improve response relevance, the system integrates retrieval over task data, implementation roadmap sections, and indexed repository code chunks.
+
+Beyond execution workflows, Nexus includes roadmap generation and versioning, analytics dashboards with AI-generated narrative interpretation, team collaboration through role-based invitations, and GitHub integration for repository indexing, webhook-triggered reindex, and commit-to-task reconciliation. The implemented system demonstrates that AI capabilities become significantly more useful when grounded in project-specific operational context rather than generic prompting.
+
+The resulting contribution is an end-to-end, modular, extensible software engineering platform that goes beyond traditional Kanban tools by combining collaboration and delivery control with context-aware intelligence. While current limitations remain in authorization hardening consistency and production-level testing depth, the implementation provides a strong foundation for future evolution into a production-grade engineering operations platform.
+
+\pagestyle{fancy}
+%--------------------------------------------------------
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+
+%% ----------------------------------------------------------------
+\mainmatter
+
+\chapter{Introduction}
+\label{ch:intro}
+\lhead{\emph{chapter: 01}}
+
+\section{The Area of Work}
+This project lies at the intersection of software project management, intelligent developer tooling, and retrieval-augmented AI systems. Traditional project management platforms are efficient at CRUD operations on tasks but are limited in reasoning support and often disconnected from source code context. Conversely, modern large language model assistants are powerful in generation but often weak in project-specific grounding.
+
+Project Nexus addresses this gap by integrating a structured project workspace with context-aware AI pipelines. The system combines four functional dimensions: (i) execution management through Kanban workflows, (ii) collaborative governance through role-based access and invitation flows, (iii) AI-assisted planning and conversation, and (iv) code-aware automation through repository indexing and webhooks. The architectural direction follows modular decomposition and emphasizes traceability between plans, tasks, and repository changes.
+
+\section{Problem Addressed}
+Software teams commonly face the following operational problems:
+
+\begin{enumerate}
+\item Context fragmentation across multiple tools (task board, chat assistant, source control, documentation).
+\item Weak mapping between high-level requirements and actionable task decomposition.
+\item Limited insight generation from live project telemetry.
+\item Incomplete collaboration governance in small-team environments.
+\item Absence of code-grounded assistance during planning and execution.
+\end{enumerate}
+
+The project objective is to design and implement a unified platform where AI can access operational project context directly. The resulting assistant quality is expected to improve because prompts are conditioned by project state rather than isolated user text.
+
+\section{Existing System}
+The current ecosystem can be broadly grouped into project management tools and AI assistants. Representative systems used by modern software teams include Jira, Trello, Asana, ClickUp, GitHub Projects, Notion, ChatGPT, Claude, and GitHub Copilot.
+
+\subsection{Established Project Management Platforms: Jira, Trello, Asana, and ClickUp}
+These platforms provide robust task and workflow management with Kanban boards, sprint planning, assignees, labels, and reporting. Jira is strong for enterprise process control and backlog workflows; Trello is lightweight and easy to adopt; Asana and ClickUp provide broad team productivity features. However, they generally depend on manual context transfer when users need project-specific AI reasoning, and they do not natively ground model outputs on live vector retrieval across roadmap content and repository code.
+
+\subsection{Code-Centric Collaboration Workspaces: GitHub Projects and Notion-style Tools}
+GitHub Projects is well aligned with engineering workflows and repository events, while Notion-style workspaces are strong for documentation and flexible planning. These systems improve collaboration and traceability, but advanced AI operations still rely on separate tools or plugin ecosystems, and requirement decomposition into structured engineering tasks is often manual.
+
+\subsection{Generic AI Assistants: ChatGPT, Claude, and GitHub Copilot Chat}
+Standalone AI assistants provide summarization, drafting, and coding support, but they usually lack native linkage with team workflow state (project roles, invitation status, task-event history, roadmap versions, and live board analytics).
+
+\subsubsection{Operational Pattern of Generic AI Assistants}
+In a generic setup, user prompts and ad hoc context snippets are sent to a model endpoint. The model can return useful text but has no durable operational context unless explicitly re-provided every time. This limits reliability for project governance decisions and reduces confidence for workflow automation.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{2.2cm}|C{1.7cm}|C{1.8cm}|C{1.8cm}|L{2.5cm}|}
+\hline
+\textbf{System} & \textbf{Task Workflow} & \textbf{AI Grounding on Project Data} & \textbf{GitHub Coupling} & \textbf{Typical Limitation} \\
+\hline
+Jira & Strong & Limited & Moderate & Rich process control, but AI context typically external \\
+\hline
+Trello & Basic to Moderate & Limited & Basic & Easy UI, but weaker analytics and automation depth \\
+\hline
+GitHub Projects & Moderate & Limited & Strong & Good code linkage, limited integrated AI planning \\
+\hline
+Generic AI assistants & None & Prompt-dependent & Limited & Strong generation, weak persistent workflow memory \\
+\hline
+Project Nexus & Strong & Strong & Strong & Current focus area is production hardening and testing depth \\
+\hline
+\end{tabular}
+\caption{Comparison of representative existing systems with Project Nexus}
+\label{tab:system-comparison}
+\end{table}
+
+\section{Project Objectives and Contributions}
+The major contributions of Project Nexus are summarized below:
+
+\begin{enumerate}
+\item A full-stack implementation of an AI-native project management platform with modular architecture.
+\item Retrieval augmentation over three project context channels: tasks, roadmap sections, and code chunks.
+\item A structured Architect Agent using iterative critique before task finalization.
+\item Integrated collaboration layer with invitation lifecycle and role hierarchy enforcement.
+\item GitHub-aware automation pipeline with indexing and webhook-driven synchronization.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.3cm}|L{4.3cm}|L{5.1cm}|}
+\hline
+\textbf{Objective} & \textbf{Implementation Choice} & \textbf{Outcome} \\
+\hline
+Unify delivery workflow & Single Next.js app with server actions and project-scoped routes & Reduced context switching and aligned module ownership \\
+\hline
+Improve AI response relevance & Qdrant retrieval over task, roadmap, and repository code vectors & Contextual answers aligned with active project state \\
+\hline
+Automate requirement decomposition & LangGraph Plan-Critique-Finalize flow with structured schemas & Higher quality generated tasks with acceptance workflow \\
+\hline
+Enable team governance & Invitation lifecycle plus owner-admin-member role hierarchy & Controlled multi-user collaboration \\
+\hline
+Close loop with repository activity & GitHub OAuth, indexing, and webhook commit matching & Traceable relation between commits and task progress \\
+\hline
+\end{tabular}
+\caption{Project Nexus objectives and implemented outcomes}
+\label{tab:intro-objectives}
+\end{table}
+
+\FloatBarrier
+
+\chapter{Literature Review}
+\label{ch:literature}
+\lhead{\emph{chapter: 02}}
+
+\section{Introduction}
+This chapter reviews prior work relevant to the design of Project Nexus: transformer-based language modeling, retrieval-augmented generation, software architecture modularity, and modern full-stack engineering platforms. The goal is not to reproduce all theory, but to identify design choices that can be translated into practical system architecture.
+
+\section{Foundations in Language Models and Retrieval}
+The transformer architecture introduced in \cite{vaswani2017attention} established the dominant paradigm for sequence modeling and remains foundational for modern assistant systems. Subsequent model scaling and instruction tuning enabled broad capability improvements, as discussed in \cite{openai2023gpt4}.
+
+However, generation quality depends heavily on grounding. Retrieval-Augmented Generation (RAG) formalizes the strategy of augmenting prompts with external knowledge to improve faithfulness and task relevance \cite{lewis2020rag,gao2023retrieval}. Project Nexus adopts this principle by retrieving context from project-native sources instead of relying only on parametric model memory.
+
+\section{Architectural and DevOps Perspectives}
+Software architecture principles emphasize modular decomposition, explicit interfaces, and maintainable boundaries \cite{bass2021software}. In distributed product development, automation and continuous feedback loops are central to delivery reliability \cite{humble2010continuous}. These principles motivate Nexus decisions such as domain-focused modules, query-layer abstraction, telemetry persistence, and webhook-triggered synchronization.
+
+\section{Technology Ecosystem Review}
+Project Nexus uses a modern open-source stack including Next.js for the full-stack runtime \cite{nextjsDocs2026}, Supabase for authentication and managed Postgres integration \cite{supabaseDocs2026}, Drizzle ORM for type-safe relational access \cite{drizzleDocs2026}, Qdrant for vector search \cite{qdrantDocs2026}, LangGraph for graph-driven AI orchestration \cite{langgraphDocs2026}, and DnD Kit for interaction modeling on the task board \cite{dndkitDocs2026}.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.6in][c]{0.9\textwidth}{\centering Placeholder for literature taxonomy diagram\\(to be inserted by authors)}}
+\caption{Literature taxonomy used for Project Nexus design decisions}
+\label{fig:literature-taxonomy}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.2cm}|L{3.2cm}|L{4.0cm}|L{2.7cm}|}
+\hline
+\textbf{Reference Area} & \textbf{Representative Work} & \textbf{Relevance to Nexus} & \textbf{Design Translation} \\
+\hline
+Attention-based sequence modeling & \cite{vaswani2017attention} & Foundation for LLM capability used in chat and agent modules & Prompt-based generation APIs \\
+\hline
+RAG and grounding methods & \cite{lewis2020rag,gao2023retrieval} & Improves response faithfulness and contextuality & Multi-collection vector retrieval \\
+\hline
+System architecture practice & \cite{bass2021software} & Supports modular and maintainable code organization & Feature-module architecture and query boundaries \\
+\hline
+Delivery automation & \cite{humble2010continuous} & Motivates event-driven consistency and observability & Webhook-triggered indexing and sync \\
+\hline
+\end{tabular}
+\caption{Key literature themes and their influence on Project Nexus}
+\label{tab:literature-summary}
+\end{table}
+
+\FloatBarrier
+
+\section{Identified Gaps and Positioning}
+Based on literature and product landscape review, two practical gaps are prominent:
+
+\begin{enumerate}
+\item Most project tools are process-rich but context-poor from an AI perspective.
+\item Most AI assistants are language-rich but workflow-poor from a project-governance perspective.
+\end{enumerate}
+
+Project Nexus positions itself between these extremes by tightly integrating AI assistance with project state, membership rules, and repository signals.
+
+\chapter{Proposed Work}
+\label{ch:new}
+\lhead{\emph{chapter: 03}}
+
+\section{System Requirements}
+
+\subsection{Functional Requirements}
+\begin{enumerate}
+\item User authentication and session management.
+\item Project creation, update, deletion, and membership management.
+\item Task lifecycle operations and Kanban visualization.
+\item Conversational AI with project-grounded context.
+\item AI-assisted requirement-to-task decomposition.
+\item Implementation roadmap generation, editing, and versioning.
+\item Project analytics and narrative reporting.
+\item GitHub repository linking, indexing, and webhook handling.
+\end{enumerate}
+
+\subsection{Non-Functional Requirements}
+\begin{enumerate}
+\item Modularity and maintainability.
+\item Role-based access control for multi-user safety.
+\item Operational observability (events, metrics, failure surfaces).
+\item Responsive UX for desktop and mobile workflows.
+\item Extensibility for provider and model changes.
+\end{enumerate}
+
+\section{High-Level Architecture}
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.8in][c]{0.92\textwidth}{\centering Placeholder for overall architecture diagram\\(client UI, server actions, Postgres, Qdrant, AI providers, GitHub APIs)}}
+\caption{Planned overall architecture diagram for Project Nexus}
+\label{fig:overall-architecture}
+\end{figure}
+
+\subsection{Layered Organization}
+The implementation follows layered modularization:
+
+\begin{enumerate}
+\item Route layer: Next.js page and API route entry points.
+\item Module layer: feature-specific actions, hooks, components, and helper libraries.
+\item Core layer: authentication, AI runtime, schema, and query contracts.
+\item Infrastructure layer: PostgreSQL, Supabase auth/session, vector storage, and external integrations.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.1cm}|L{5.0cm}|L{3.4cm}|}
+\hline
+\textbf{Layer} & \textbf{Responsibility} & \textbf{Representative Modules} \\
+\hline
+Route & User-facing navigation and API endpoints & Dashboard page, invite page, webhook route \\
+\hline
+Feature module & Domain behavior and orchestration & Kanban, Chat, Agent, Roadmap, Insight, GitHub \\
+\hline
+Core services & Shared technical contracts & Auth helpers, DB schema, AI provider runtime \\
+\hline
+Infra connectors & Persistent storage and external APIs & Supabase, Drizzle, Qdrant, GitHub OAuth/webhooks \\
+\hline
+\end{tabular}
+\caption{Layered architecture decomposition}
+\label{tab:layered-architecture}
+\end{table}
+
+\FloatBarrier
+
+\section{Data Model and Persistence Design}
+The platform currently uses 13 relational tables, covering identity, projects, tasks, events, chat persistence, AI telemetry, invitation lifecycle, roadmap versions, and GitHub index metadata. Enum constraints capture status and role semantics to reduce inconsistent writes.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.0cm}|L{6.0cm}|L{2.5cm}|}
+\hline
+\textbf{Entity Group} & \textbf{Key Tables} & \textbf{Purpose} \\
+\hline
+Identity and access & users, project\_members, project\_invitations & Auth, role control, collaboration \\
+\hline
+Project execution & projects, tasks, task\_events & Planning and task lifecycle traceability \\
+\hline
+AI interaction & chat\_messages, chat\_message\_metrics, chat\_rate\_limits, agent\_generations & Conversation history, telemetry, safety limits \\
+\hline
+Roadmap and code intelligence & implementation\_plans, github\_connections, github\_indexed\_files & Versioned plans and repo indexing metadata \\
+\hline
+\end{tabular}
+\caption{Relational data model groups in Project Nexus}
+\label{tab:data-model-groups}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][3.0in][c]{0.92\textwidth}{\centering Placeholder for ER diagram\\(users, projects, tasks, chat, roadmap, invites, github entities)}}
+\caption{Placeholder for entity relationship diagram of Project Nexus}
+\label{fig:er-diagram}
+\end{figure}
+
+\FloatBarrier
+
+\section{AI and Retrieval Workflow}
+The design combines generation and retrieval in a controlled sequence:
+
+\begin{enumerate}
+\item Capture request context (user intent, project identifier).
+\item Retrieve structured context from task vectors, roadmap vectors, and code vectors.
+\item Build role-specific prompt with bounded context windows.
+\item Invoke selected provider runtime with timeout and retry policy.
+\item Persist assistant output and telemetry for traceability.
+\end{enumerate}
+
+\begin{algorithm}[H]
+\caption{Context-Aware Chat Response Generation}
+\label{alg:chat-pipeline}
+\begin{algorithmic}[1]
+\Require projectId, userId, userMessage
+\Ensure persisted assistant response with metrics
+\State Validate user membership and rate limit window
+\State Persist user message in chat\_messages
+\State Fetch board snapshot and completion metrics
+\State Retrieve relevant roadmap sections from roadmap vector collection
+\State Retrieve relevant code chunks from code vector collection
+\State Construct system prompt with policy and context envelopes
+\State Call selected AI provider with retries and timeout bounds
+\State Persist assistant message in chat\_messages
+\State Persist telemetry in chat\_message\_metrics
+\State \Return assistant message id and content
+\end{algorithmic}
+\end{algorithm}
+
+\FloatBarrier
+
+\section{Architect Agent Workflow}
+Task decomposition is performed through a graph-driven process using planner, critic, and finalizer nodes. Iterative critique constrains low-quality outputs and enforces schema-conformant task payloads before user acceptance.
+
+\begin{algorithm}[H]
+\caption{Architect Agent with Critique Loop}
+\label{alg:architect-loop}
+\begin{algorithmic}[1]
+\Require requirementText, projectContext
+\Ensure validated task list with reasoning
+\State Retrieve relevant tasks, roadmap content, and code chunks
+\State Generate draft plan using Planner node
+\State Evaluate draft with Critic node
+\If{critique indicates revision and iteration $<$ maxIterations}
+    \State Re-plan with critique feedback
+\EndIf
+\State Finalize with Finalizer node
+\State Validate output against task schema
+\State Persist generation record
+\State \Return generated tasks and rationale
+\end{algorithmic}
+\end{algorithm}
+
+\FloatBarrier
+
+\section{Security and Governance Model}
+Project Nexus uses role hierarchy \texttt{owner $>$ admin $>$ member}. High-risk operations (project deletion, member removal constraints, invitation controls, administrative cleanup) are role-gated. The architecture also includes session-safe redirects and invitation token validation with expiry controls.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{2.8cm}|L{3.4cm}|L{5.1cm}|}
+\hline
+\textbf{Role} & \textbf{Access Level} & \textbf{Representative Permissions} \\
+\hline
+Owner & Full control & Delete project, manage all members, configure integrations \\
+\hline
+Admin & Elevated operational control & Invite users, revoke invites, remove non-owner members, admin cleanup \\
+\hline
+Member & Execution access & Create or update tasks, use chat and agent features, view project context \\
+\hline
+\end{tabular}
+\caption{Role model used in Project Nexus}
+\label{tab:role-model}
+\end{table}
+
+\FloatBarrier
+
+\section{GitHub Integration Pipeline}
+GitHub integration supports OAuth connection, repository selection, tree traversal, chunked code indexing, webhook-triggered reindexing, and commit-to-task matching. This enables AI pipelines and dashboard workflows to consume live repository context.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.6in][c]{0.92\textwidth}{\centering Placeholder for GitHub integration sequence diagram\\(OAuth setup, indexing flow, webhook update, task auto-close)}}
+\caption{Placeholder for GitHub integration and webhook processing sequence}
+\label{fig:github-sequence}
+\end{figure}
+
+\FloatBarrier
+
+\chapter{Simulation and Results}
+\label{ch:result}
+\lhead{\emph{chapter: 04}}
+
+\section{Experimental Setup}
+The implementation was validated through scenario-based system testing over the integrated stack. The setup included Next.js runtime, Supabase-backed PostgreSQL, Qdrant vector storage, and provider-backed AI endpoints.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{4.2cm}|L{6.0cm}|}
+\hline
+\textbf{Component} & \textbf{Configuration Used} \\
+\hline
+Application runtime & Next.js App Router with TypeScript strict mode \\
+\hline
+Transactional database & PostgreSQL via Supabase and Drizzle ORM \\
+\hline
+Vector retrieval & Qdrant collections for tasks, roadmap sections, and code chunks \\
+\hline
+AI provider integration & OpenAI-compatible chat completion path plus Gemini embeddings \\
+\hline
+Realtime updates & Supabase realtime on tasks table changes \\
+\hline
+\end{tabular}
+\caption{System validation setup}
+\label{tab:setup}
+\end{table}
+
+\FloatBarrier
+
+\section{Validation Scenarios}
+The following scenarios were executed to validate end-to-end behavior:
+
+\begin{enumerate}
+\item Project creation and mandatory roadmap initialization.
+\item Task CRUD operations with event logging and realtime sync.
+\item Chat response generation with contextual retrieval.
+\item Architect agent generation and partial acceptance of tasks.
+\item Role-based invitation and membership management.
+\item GitHub repository indexing and webhook-triggered updates.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|C{0.9cm}|L{4.2cm}|L{3.0cm}|L{3.1cm}|}
+\hline
+\textbf{ID} & \textbf{Scenario} & \textbf{Expected Outcome} & \textbf{Observed Outcome} \\
+\hline
+S1 & Create project with roadmap flow & Project and initial plan are created & Passed \\
+\hline
+S2 & Move task across status columns & Task status updates with event record & Passed \\
+\hline
+S3 & Ask chat for project-specific guidance & Response includes board and roadmap context & Passed \\
+\hline
+S4 & Generate tasks from requirement text & Structured tasks with priorities and story points & Passed \\
+\hline
+S5 & Invite collaborator and accept token & New member linked to project with role & Passed \\
+\hline
+S6 & Push commit event after indexing & Reindex triggered and matcher evaluated tasks & Passed \\
+\hline
+\end{tabular}
+\caption{Functional scenario validation summary}
+\label{tab:functional-validation}
+\end{table}
+
+\FloatBarrier
+
+\section{Representative Metrics and Observations}
+Since the platform is still under active development, this report records architecture-backed observations and leaves bounded placeholders for final benchmark values to be filled during final deployment testing.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{4.7cm}|C{2.6cm}|L{4.0cm}|}
+\hline
+\textbf{Metric} & \textbf{Current Value} & \textbf{Remarks} \\
+\hline
+Average chat response latency & [To be measured] & Depends on provider and retrieval payload size \\
+\hline
+Task retrieval precision at top-k & [To be measured] & Evaluate using manually labeled relevance set \\
+\hline
+Webhook-to-sync completion time & [To be measured] & Includes file diff handling and embedding updates \\
+\hline
+Board sync propagation delay & [To be measured] & Realtime path via Supabase events \\
+\hline
+Invite acceptance success rate & [To be measured] & Includes signup-claim flow and token expiry handling \\
+\hline
+\end{tabular}
+\caption{Performance and reliability measurement placeholders}
+\label{tab:metrics-placeholders}
+\end{table}
+
+\FloatBarrier
+
+\section{Screenshots and Visual Evidence Placeholders}
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.0in][c]{0.88\textwidth}{\centering Placeholder for Dashboard screenshot}}
+\caption{Dashboard view with project cards and creation workflow}
+\label{fig:dashboard-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.0in][c]{0.88\textwidth}{\centering Placeholder for Kanban board screenshot}}
+\caption{Kanban board interface with drag and drop and task modal}
+\label{fig:kanban-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.0in][c]{0.88\textwidth}{\centering Placeholder for Chat and AI context screenshot}}
+\caption{Context-aware chat interface and response panel}
+\label{fig:chat-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.0in][c]{0.88\textwidth}{\centering Placeholder for Roadmap module screenshot}}
+\caption{Roadmap generation, section editing, and version history view}
+\label{fig:roadmap-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox[c][2.0in][c]{0.88\textwidth}{\centering Placeholder for GitHub integration screenshot}}
+\caption{GitHub connection and code indexing interface}
+\label{fig:github-screenshot}
+\end{figure}
+
+\FloatBarrier
+
+\section{Critical Analysis}
+The current implementation demonstrates that tightly coupling AI with project-native retrieval significantly improves practical usefulness compared to generic prompting. The strongest outcomes were observed in requirement decomposition quality and context-aware chat relevance.
+
+At the same time, production hardening concerns remain:
+\begin{enumerate}
+\item authorization consistency should be enforced across all project-scoped action modules,
+\item automated test depth is currently limited,
+\item build-time type and lint bypass settings should be tightened,
+\item webhook replay and idempotency protections should be expanded.
+\end{enumerate}
+
+\section{Outcome Summary}
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.6cm}|L{3.2cm}|L{4.1cm}|}
+\hline
+\textbf{Subsystem} & \textbf{Implementation Status} & \textbf{Remarks} \\
+\hline
+Authentication and sessions & Complete & Email-password and OAuth with safe redirects \\
+\hline
+Task management and board & Complete & Realtime sync and event tracking available \\
+\hline
+Chat and AI telemetry & Complete & Context retrieval and metrics persistence implemented \\
+\hline
+Architect agent & Complete & Iterative critique loop implemented \\
+\hline
+Roadmap module & Complete & Versioned plan lifecycle and section operations \\
+\hline
+Team collaboration & Complete & Invite tokens and role hierarchy integrated \\
+\hline
+GitHub integration & Complete & OAuth, indexing, and webhook path available \\
+\hline
+Production deployment and ops hardening & Planned & Deploy end-to-end stack so collaboration and webhooks run reliably in hosted environment \\
+\hline
+Repository-scoped GitHub access & Planned & Replace broad account-level access with single-repository authorization flow \\
+\hline
+Repository access security hardening & Planned & Strengthen token handling, permission boundaries, and security controls for repo connectivity \\
+\hline
+\end{tabular}
+\caption{Implementation status at report submission time}
+\label{tab:status-summary}
+\end{table}
+
+\FloatBarrier
+
+\chapter{Conclusions and Future Work}
+\label{ch:conclude}
+\lhead{\emph{chapter: 05}}
+
+\section{Conclusions}
+Project Nexus demonstrates a practical architecture for AI-augmented project operations. Rather than treating AI as an external chatbot, the system embeds AI workflows into project lifecycle operations: planning, decomposition, execution tracking, and repository feedback. This integration produces a meaningful improvement in operational relevance and decision support.
+
+From an engineering perspective, the implementation validates four important principles:
+\begin{enumerate}
+\item AI utility increases when prompts are grounded in structured project state.
+\item Modular architecture enables rapid feature growth without structural collapse.
+\item Telemetry and audit trails are essential for trustworthy AI-assisted workflows.
+\item Repository events can be integrated into planning loops to reduce manual status drift.
+\end{enumerate}
+
+\section{Future Work}
+Future enhancements are organized by technical priority:
+
+\begin{enumerate}
+\item \textbf{Authorization hardening}: enforce membership and role guards consistently across all project-scoped actions.
+\item \textbf{Test engineering}: add automated unit and integration tests for invitations, role checks, task events, and webhook safety.
+\item \textbf{Build quality gates}: remove broad build ignores and adopt strict CI checks.
+\item \textbf{Webhook reliability}: implement replay protection and idempotency keys.
+\item \textbf{Profile and identity UX}: complete profile module and user preference controls.
+\item \textbf{Advanced analytics}: add trend anomaly detection, sprint forecast confidence, and role-based insight dashboards.
+\item \textbf{Retrieval optimization}: introduce reranking and retrieval diagnostics for improved precision.
+\end{enumerate}
+
+\section{Final Remark}
+The completed system is already beyond prototype level in feature coverage and architectural depth. With focused hardening and verification, Project Nexus can evolve into a production-grade intelligent engineering operations platform.
+
+%% ----------------------------------------------------------------
+
+\addtotoc{Bibliography}
+\addtocontents{Bibliography}{\vspace{2em}}
+\newpage
+\lhead{\emph{Bibliography}}
+\small{\bibliography{bibch1}{}}
+\bibliographystyle{ieeetr}
+
+\end{document}
+%% ----------------------------------------------------------------
