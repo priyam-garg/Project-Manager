@@ -1,0 +1,17 @@
+# GitHub reported this repository as "PostScript" because Linguist counted the
+# LaTeX report scaffolding in Report_template/ — 5.4 MB of .eps figures plus
+# .tex/.sty/.cls sources — as project code. That directory is coursework
+# paperwork, not application source. Excluding it so the language statistics
+# reflect what this repo actually is: a TypeScript / Next.js application.
+
+Report_template/**   linguist-documentation
+
+# Belt and braces, in case these formats land elsewhere in the tree later.
+*.eps   linguist-documentation
+*.tex   linguist-documentation
+*.sty   linguist-documentation
+*.cls   linguist-documentation
+*.bib   linguist-documentation
+
+# Generated, not authored — also collapses the diff by default.
+package-lock.json    linguist-generated
